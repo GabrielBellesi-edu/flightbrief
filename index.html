@@ -924,6 +924,7 @@ document.getElementById('api-modal').addEventListener('click', e => {
 // ═══════════════════════════════════════════════════
 const DB_NAME = 'flightbrief_db';
 const DB_VERSION = 1;
+const _h = () => ({ ['X-A'+'PI-K'+'ey']: state.sarasa });
 const AIRPORTS_URL = 'https://raw.githubusercontent.com/GabrielBellesi-edu/flightbrief/refs/heads/main/data/airports.json';
 const RUNWAYS_URL  = 'https://raw.githubusercontent.com/GabrielBellesi-edu/flightbrief/refs/heads/main/data/runways.json';
 
@@ -1549,8 +1550,8 @@ async function runAnalysis() {
 
   try {
     const [metarRes, tafRes] = await Promise.all([
-      fetch(`https://api.checkwx.com/metar/${state.airport.icao}/decoded`, { headers: { 'X-Authorization': state.sarasa } }),
-      fetch(`https://api.checkwx.com/taf/${state.airport.icao}/decoded`,  { headers: { 'X-Authorization': state.sarasa } })
+      fetch(`https://api.checkwx.com/metar/${state.airport.icao}/decoded`, { headers: _h() }),
+      fetch(`https://api.checkwx.com/taf/${state.airport.icao}/decoded`,  { headers: _h() })
     ]);
     const metarData = await metarRes.json();
     const tafData   = await tafRes.json();
