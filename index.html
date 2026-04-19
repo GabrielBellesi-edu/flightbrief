@@ -799,6 +799,9 @@ body {
   </div>
 </div>
 
+<!-- DB STATUS BAR -->
+<div id="db-status-bar" style="display:none;position:fixed;bottom:65px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;font-size:0.8rem;font-family:var(--mono);z-index:99;text-align:center;color:var(--text2)"></div>
+
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="nav-item active" onclick="showScreen('brief')" id="nav-brief">
@@ -1051,19 +1054,15 @@ async function refreshDatabase() {
 }
 
 function showDbStatus(msg, isError) {
-  let el = document.getElementById('db-status-bar');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'db-status-bar';
-    el.style.cssText = 'position:fixed;bottom:70px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;font-size:0.8rem;font-family:var(--mono);z-index:99;text-align:center;';
-    document.body.appendChild(el);
-  }
+  const el = document.getElementById('db-status-bar');
+  if (!el) return;
+  el.style.display = 'block';
   el.style.color = isError ? 'var(--nogo)' : 'var(--text2)';
   el.innerHTML = msg;
 }
 function hideDbStatus() {
   const el = document.getElementById('db-status-bar');
-  if (el) el.remove();
+  if (el) el.style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1845,10 +1844,9 @@ if (!state.sarasa) {
   setTimeout(() => mostrarConfig(), 500);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  console.log('[FlightBrief] Iniciando base de datos...');
-  initDatabase();
-});
+// Llamar initDatabase directamente — no esperar eventos
+console.log('[FlightBrief] Iniciando base de datos...');
+initDatabase();
 
 // SERVICE WORKER
 if ('serviceWorker' in navigator) {
