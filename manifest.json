@@ -5,8 +5,8 @@
   "start_url": "/flightbrief/",
   "scope": "/flightbrief/",
   "display": "standalone",
-  "background_color": "#0a0e14",
-  "theme_color": "#00d4ff",
+  "background_color": "#f8f9fc",
+  "theme_color": "#1a6bff",
   "orientation": "portrait-primary",
   "icons": [
     {
