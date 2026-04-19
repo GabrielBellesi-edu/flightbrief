@@ -2,7 +2,7 @@
   "name": "Flight Brief — GO/NO-GO",
   "short_name": "FlightBrief",
   "description": "Sistema de decisión GO/NO-GO para pilotos de aviación general",
-  "start_url": "/flight-gonogo.html",
+  "start_url": "/flightbrief/",
   "display": "standalone",
   "background_color": "#0a0e14",
   "theme_color": "#00d4ff",
