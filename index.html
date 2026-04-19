@@ -627,12 +627,11 @@ async function fetchMetar() {
   setStatus('metar-status','','<span class="spinner"></span>Consultando AviationWeather.gov...');
   document.querySelector('.btn-fetch').disabled = true;
   try {
-    const url = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw&hours=2`;
-    const res = await fetch(url);
-    const text = await res.text();
-    const lines = text.trim().split('\n').filter(l => l.trim());
-    if (!lines.length) throw new Error('Sin datos METAR para ' + icao);
-    const raw = lines[0].trim();
+    const url = `https://api.checkwx.com/metar/${icao}/decoded`;
+    const res = await fetch(url, { headers: { 'X-API-Key': '5c8c2ca8bc494b98bbc53eb007ef8e8f' } });
+    const data = await res.json();
+    if (!data.data || !data.data.length) throw new Error('Sin datos METAR para ' + icao);
+    const raw = data.data[0].raw_text;
     document.getElementById('metar-raw').textContent = raw;
     document.getElementById('metar-raw').classList.add('visible');
     parsedMetar = parseMetar(raw);
