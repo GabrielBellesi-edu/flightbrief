@@ -1,13 +1,13 @@
-const CACHE = 'flightbrief-v1';
+const CACHE = 'flightbrief-v2';
 const ASSETS = [
-  './flight-gonogo.html',
+  './',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap'
+  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'
 ];
 
-// Instalación: cachea todos los archivos estáticos
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
@@ -15,7 +15,6 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// Activación: limpia caches viejos
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -25,20 +24,31 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: primero intenta la red, si falla usa el cache
-// Para APIs externas (METAR, Open-Meteo) siempre intenta la red primero
 self.addEventListener('fetch', e => {
   const url = e.request.url;
-  const isAPI = url.includes('aviationweather.gov') || url.includes('open-meteo.com');
+  const isAPI = url.includes('checkwx.com') || url.includes('open-meteo.com');
+  const isData = url.includes('/data/airports.json') || url.includes('/data/runways.json');
 
   if (isAPI) {
-    // Network first para APIs — si falla, responde con mensaje de error
+    // Siempre red para datos en tiempo real
     e.respondWith(
       fetch(e.request).catch(() =>
-        new Response(JSON.stringify({ error: 'Sin conexión — datos en tiempo real no disponibles' }), {
+        new Response(JSON.stringify({ error: 'Sin conexión' }), {
           headers: { 'Content-Type': 'application/json' }
         })
       )
+    );
+  } else if (isData) {
+    // Cache first para los JSON de la base de datos
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+          return res;
+        });
+      })
     );
   } else {
     // Cache first para recursos estáticos
