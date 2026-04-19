@@ -979,19 +979,26 @@ function dbGet(db, store, key) {
 }
 
 async function initDatabase() {
-  showDbStatus('Iniciando base de datos...');
+  showDbStatus('<span class="spin"></span>Iniciando base de datos...');
   try {
+    console.log('[FlightBrief] Abriendo IndexedDB...');
     const db = await openDB();
+    console.log('[FlightBrief] IndexedDB abierto OK');
     const meta = await dbGet(db, 'meta', 'loaded');
+    console.log('[FlightBrief] Meta:', meta);
     if (meta && meta.value) {
+      console.log('[FlightBrief] Datos ya en cache, cargando...');
       state.airportsDb = await dbGetAll(db, 'airports');
       state.runwaysDb  = await dbGetAll(db, 'runways');
       state.dbReady = true;
+      console.log('[FlightBrief] DB lista:', state.airportsDb.length, 'aeropuertos,', state.runwaysDb.length, 'pistas');
       hideDbStatus();
       return;
     }
+    console.log('[FlightBrief] Sin cache, descargando...');
     await downloadAndStore(db);
   } catch(e) {
+    console.error('[FlightBrief] Error initDatabase:', e);
     showDbStatus('Error al iniciar base de datos: ' + e.message, true);
   }
 }
@@ -999,12 +1006,17 @@ async function initDatabase() {
 async function downloadAndStore(db) {
   showDbStatus('<span class="spin"></span>Descargando base de aeropuertos (primera vez)...');
   try {
-    const [apRes, rwRes] = await Promise.all([
-      fetch(AIRPORTS_URL),
-      fetch(RUNWAYS_URL)
-    ]);
+    console.log('[FlightBrief] Descargando', AIRPORTS_URL);
+    const apRes = await fetch(AIRPORTS_URL);
+    console.log('[FlightBrief] airports.json status:', apRes.status);
     const airports = await apRes.json();
-    const runways  = await rwRes.json();
+    console.log('[FlightBrief] airports cargados:', airports.length);
+
+    console.log('[FlightBrief] Descargando', RUNWAYS_URL);
+    const rwRes = await fetch(RUNWAYS_URL);
+    console.log('[FlightBrief] runways.json status:', rwRes.status);
+    const runways = await rwRes.json();
+    console.log('[FlightBrief] runways cargados:', runways.length);
 
     showDbStatus('<span class="spin"></span>Guardando en base de datos local...');
     await dbPutAll(db, 'airports', airports);
@@ -1014,8 +1026,10 @@ async function downloadAndStore(db) {
     state.airportsDb = airports;
     state.runwaysDb  = runways;
     state.dbReady = true;
+    console.log('[FlightBrief] DB lista y guardada');
     hideDbStatus();
   } catch(e) {
+    console.error('[FlightBrief] Error downloadAndStore:', e);
     showDbStatus('Error descargando datos: ' + e.message, true);
   }
 }
@@ -1829,6 +1843,11 @@ renderAcTabs();
 if (!state.sarasa) {
   setTimeout(() => mostrarConfig(), 500);
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('[FlightBrief] Iniciando base de datos...');
+  initDatabase();
+});
 
 // SERVICE WORKER
 if ('serviceWorker' in navigator) {
