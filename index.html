@@ -122,7 +122,7 @@ body {
 }
 .theme-btn:hover { background: var(--border); }
 
-/* API KEY BADGE */
+/* BADGE */
 .api-badge {
   font-size: 11px;
   font-family: var(--mono);
@@ -585,7 +585,7 @@ body {
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 .btn-row { display: flex; gap: 8px; margin-top: 4px; }
 
-/* API KEY MODAL */
+/* MODAL */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5);
@@ -681,7 +681,7 @@ body {
     <span>Flight<em>Brief</em></span>
   </div>
   <div class="topbar-right">
-    <button class="api-badge" onclick="showApiModal()">API Key</button>
+    <button class="api-badge" onclick="mostrarConfig()">⚙</button>
     <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
   </div>
 </div>
@@ -693,7 +693,7 @@ body {
     <div class="card-title">Aeropuerto de salida</div>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
-      <input class="search-input" id="icao-input" type="text" placeholder="Buscar por ICAO o nombre..." maxlength="4" oninput="onIcaoInput(this.value)" />
+      <input class="search-input" id="icao-input" type="text" placeholder="Buscar por ICAO o nombre..." oninput="onIcaoInput(this.value)" />
     </div>
     <div class="search-results" id="search-results"></div>
     <div class="airport-selected" id="airport-selected">
@@ -812,13 +812,13 @@ body {
   </button>
 </div>
 
-<!-- API KEY MODAL -->
+<!-- CONFIG MODAL -->
 <div class="modal-overlay" id="api-modal">
   <div class="modal">
-    <h3>CheckWX API Key</h3>
-    <p>Ingresá tu API Key de <strong>checkwx.com</strong> para obtener datos METAR y TAF en tiempo real.</p>
-    <input type="text" id="api-key-input" placeholder="Tu API Key..." />
-    <button class="modal-btn" onclick="saveApiKey()">Guardar</button>
+    <h3>Configuración</h3>
+    <p>Credencial de acceso al servicio meteorológico en tiempo real.</p>
+    <input type="text" id="config-input" placeholder="Credencial..." />
+    <button class="modal-btn" onclick="guardarCredencial()">Guardar</button>
   </div>
 </div>
 
@@ -859,9 +859,12 @@ let state = {
   tafRaw: '',
   forecast: null,
   customAircraft: JSON.parse(localStorage.getItem('fb_aircraft_v2') || '[]'),
-  apiKey: localStorage.getItem('fb_apikey') || '',
+  sarasa: localStorage.getItem('fb_sarasa') || '5c8c2ca8bc494b98bbc53eb007ef8e8f',
   theme: localStorage.getItem('fb_theme') || 'light',
-  currentView: 'metar'
+  currentView: 'metar',
+  dbReady: false,
+  airportsDb: [],
+  runwaysDb: []
 };
 
 // ═══════════════════════════════════════════════════
@@ -899,16 +902,16 @@ function showView(name) {
 }
 
 // ═══════════════════════════════════════════════════
-// API KEY
+// CREDENTIALS
 // ═══════════════════════════════════════════════════
-function showApiModal() {
-  document.getElementById('api-key-input').value = state.apiKey;
+function mostrarConfig() {
+  document.getElementById('config-input').value = state.sarasa;
   document.getElementById('api-modal').classList.add('visible');
 }
-function saveApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  state.apiKey = key;
-  localStorage.setItem('fb_apikey', key);
+function guardarCredencial() {
+  const cred = document.getElementById('config-input').value.trim();
+  state.sarasa = cred;
+  localStorage.setItem('fb_sarasa', cred);
   document.getElementById('api-modal').classList.remove('visible');
 }
 document.getElementById('api-modal').addEventListener('click', e => {
@@ -917,39 +920,166 @@ document.getElementById('api-modal').addEventListener('click', e => {
 });
 
 // ═══════════════════════════════════════════════════
-// AIRPORT SEARCH
+// INDEXEDDB
+// ═══════════════════════════════════════════════════
+const DB_NAME = 'flightbrief_db';
+const DB_VERSION = 1;
+const AIRPORTS_URL = 'https://raw.githubusercontent.com/GabrielBellesi-edu/flightbrief/refs/heads/main/data/airports.json';
+const RUNWAYS_URL  = 'https://raw.githubusercontent.com/GabrielBellesi-edu/flightbrief/refs/heads/main/data/runways.json';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('airports')) {
+        const as = db.createObjectStore('airports', { keyPath: 'ICAO' });
+        as.createIndex('name', 'name', { unique: false });
+        as.createIndex('country', 'country', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('runways')) {
+        const rs = db.createObjectStore('runways', { autoIncrement: true });
+        rs.createIndex('airport', 'airport', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('meta')) {
+        db.createObjectStore('meta', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGetAll(db, store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbPutAll(db, store, items) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    const os = tx.objectStore(store);
+    items.forEach(item => os.put(item));
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function dbGet(db, store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function initDatabase() {
+  showDbStatus('Iniciando base de datos...');
+  try {
+    const db = await openDB();
+    const meta = await dbGet(db, 'meta', 'loaded');
+    if (meta && meta.value) {
+      state.airportsDb = await dbGetAll(db, 'airports');
+      state.runwaysDb  = await dbGetAll(db, 'runways');
+      state.dbReady = true;
+      hideDbStatus();
+      return;
+    }
+    await downloadAndStore(db);
+  } catch(e) {
+    showDbStatus('Error al iniciar base de datos: ' + e.message, true);
+  }
+}
+
+async function downloadAndStore(db) {
+  showDbStatus('<span class="spin"></span>Descargando base de aeropuertos (primera vez)...');
+  try {
+    const [apRes, rwRes] = await Promise.all([
+      fetch(AIRPORTS_URL),
+      fetch(RUNWAYS_URL)
+    ]);
+    const airports = await apRes.json();
+    const runways  = await rwRes.json();
+
+    showDbStatus('<span class="spin"></span>Guardando en base de datos local...');
+    await dbPutAll(db, 'airports', airports);
+    await dbPutAll(db, 'runways', runways);
+    await dbPutAll(db, 'meta', [{ key: 'loaded', value: true, date: new Date().toISOString() }]);
+
+    state.airportsDb = airports;
+    state.runwaysDb  = runways;
+    state.dbReady = true;
+    hideDbStatus();
+  } catch(e) {
+    showDbStatus('Error descargando datos: ' + e.message, true);
+  }
+}
+
+async function refreshDatabase() {
+  showDbStatus('<span class="spin"></span>Actualizando base de datos...');
+  try {
+    const db = await openDB();
+    const tx = db.transaction(['airports','runways','meta'], 'readwrite');
+    tx.objectStore('airports').clear();
+    tx.objectStore('runways').clear();
+    tx.objectStore('meta').clear();
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    await downloadAndStore(db);
+  } catch(e) {
+    showDbStatus('Error actualizando: ' + e.message, true);
+  }
+}
+
+function showDbStatus(msg, isError) {
+  let el = document.getElementById('db-status-bar');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'db-status-bar';
+    el.style.cssText = 'position:fixed;bottom:70px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;font-size:0.8rem;font-family:var(--mono);z-index:99;text-align:center;';
+    document.body.appendChild(el);
+  }
+  el.style.color = isError ? 'var(--nogo)' : 'var(--text2)';
+  el.innerHTML = msg;
+}
+function hideDbStatus() {
+  const el = document.getElementById('db-status-bar');
+  if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════════════
+// AIRPORT SEARCH (local DB)
 // ═══════════════════════════════════════════════════
 let searchTimeout = null;
 function onIcaoInput(val) {
   clearTimeout(searchTimeout);
   val = val.trim().toUpperCase();
   if (val.length < 2) { hideResults(); return; }
-  searchTimeout = setTimeout(() => searchAirport(val), 400);
+  if (!state.dbReady) { showDbStatus('Base de datos cargando...'); return; }
+  searchTimeout = setTimeout(() => searchAirportLocal(val), 150);
 }
 
-async function searchAirport(q) {
-  if (!state.apiKey) { showApiModal(); return; }
-  try {
-    const res = await fetch(`https://api.checkwx.com/station/${q}`, {
-      headers: { 'X-API-Key': state.apiKey }
-    });
-    const data = await res.json();
-    if (data.data && data.data.length) {
-      showResults(data.data.slice(0, 5));
-    } else {
-      hideResults();
-    }
-  } catch(e) {
-    hideResults();
-  }
+function searchAirportLocal(q) {
+  const results = state.airportsDb.filter(a => {
+    if (!a.ICAO) return false;
+    return a.ICAO.startsWith(q) ||
+      (a.name && a.name.toUpperCase().includes(q)) ||
+      (a.IATA && a.IATA === q);
+  }).slice(0, 8);
+  if (results.length) showResults(results);
+  else hideResults();
 }
 
 function showResults(airports) {
   const el = document.getElementById('search-results');
   el.innerHTML = airports.map(a => `
-    <div class="search-result-item" onclick="selectAirport('${a.icao}','${escHtml(a.name)}',${a.latitude?.decimal||0},${a.longitude?.decimal||0})">
-      <div class="sri-icao">${a.icao}</div>
-      <div class="sri-name">${a.name}${a.city ? ' · ' + a.city : ''}</div>
+    <div class="search-result-item" onclick="selectAirport('${escHtml(a.ICAO)}','${escHtml(a.name)}',${parseFloat(a.lat)||0},${parseFloat(a.lon)||0})">
+      <div class="sri-icao">${a.ICAO}${a.IATA ? ' / '+a.IATA : ''}</div>
+      <div class="sri-name">${escHtml(a.name)}${a.city ? ' · ' + a.city : ''}${a.country ? ' · '+a.country : ''}</div>
     </div>
   `).join('');
   el.classList.add('visible');
@@ -958,15 +1088,14 @@ function hideResults() {
   document.getElementById('search-results').classList.remove('visible');
 }
 
-async function selectAirport(icao, name, lat, lon) {
+function selectAirport(icao, name, lat, lon) {
   hideResults();
   document.getElementById('icao-input').value = '';
   state.airport = { icao, name, lat, lon };
   document.getElementById('as-icao').textContent = icao;
   document.getElementById('as-name').textContent = name;
   document.getElementById('airport-selected').classList.add('visible');
-  setBriefStatus('', '<span class="spin"></span>Cargando pistas...');
-  await fetchRunways(icao);
+  loadRunwaysFromDb(icao);
   checkAnalyzeReady();
 }
 
@@ -982,39 +1111,54 @@ function clearAirport() {
   checkAnalyzeReady();
 }
 
-async function fetchRunways(icao) {
-  try {
-    const res = await fetch(`https://api.checkwx.com/station/${icao}`, {
-      headers: { 'X-API-Key': state.apiKey }
-    });
-    const data = await res.json();
-    const station = data.data && data.data[0];
-    if (station && station.runways && station.runways.length) {
-      state.runways = station.runways;
-      renderRunways(state.runways);
-      document.getElementById('rwy-card').style.display = 'block';
-      setBriefStatus('ok', `${state.runways.length} pistas encontradas`);
-    } else {
-      document.getElementById('rwy-card').style.display = 'none';
-      setBriefStatus('', 'Sin info de pistas — podrás analizar igual');
-    }
-  } catch(e) {
+function rwyHdgFromIdent(ident) {
+  if (!ident) return null;
+  const n = parseInt(ident.replace(/[^0-9]/g, ''));
+  if (isNaN(n) || n < 1 || n > 36) return null;
+  return n * 10;
+}
+
+function loadRunwaysFromDb(icao) {
+  const rwys = state.runwaysDb.filter(r => r.airport === icao);
+  if (!rwys.length) {
     document.getElementById('rwy-card').style.display = 'none';
-    setBriefStatus('', '');
+    setBriefStatus('', 'Sin info de pistas — podrás analizar igual');
+    return;
   }
+  state.runways = rwys;
+  renderRunways(rwys);
+  document.getElementById('rwy-card').style.display = 'block';
+  setBriefStatus('ok', `${rwys.length} pista(s) encontrada(s)`);
 }
 
 function renderRunways(rwys) {
   const grid = document.getElementById('rwy-grid');
-  grid.innerHTML = rwys.map(r => {
-    const hdg = r.heading_true || r.heading_magnetic || 0;
-    return `
-      <div class="rwy-btn" onclick="selectRunway('${r.ident}',${hdg},this)">
-        <div class="rwy-code">RWY ${r.ident}</div>
-        <div class="rwy-hdg">${hdg}° magnético</div>
-      </div>
-    `;
-  }).join('');
+  const buttons = [];
+  rwys.forEach(r => {
+    const lIdent = r.l_ident;
+    const rIdent = r.r_ident;
+    const lHdg = parseFloat(r.l_hdg) || rwyHdgFromIdent(lIdent);
+    const rHdg = parseFloat(r.r_hdg) || rwyHdgFromIdent(rIdent);
+    const surf = r.surface ? ` · ${r.surface}` : '';
+    const len  = r.length  ? ` · ${r.length}m` : '';
+    if (lIdent && lIdent !== 'H1') {
+      buttons.push(`
+        <div class="rwy-btn" onclick="selectRunway('${escHtml(lIdent)}',${lHdg||0},this)">
+          <div class="rwy-code">RWY ${lIdent}</div>
+          <div class="rwy-hdg">${lHdg ? lHdg+'°' : '—'}${surf}${len}</div>
+        </div>
+      `);
+    }
+    if (rIdent && rIdent !== lIdent && rIdent !== 'H1') {
+      buttons.push(`
+        <div class="rwy-btn" onclick="selectRunway('${escHtml(rIdent)}',${rHdg||0},this)">
+          <div class="rwy-code">RWY ${rIdent}</div>
+          <div class="rwy-hdg">${rHdg ? rHdg+'°' : '—'}${surf}${len}</div>
+        </div>
+      `);
+    }
+  });
+  grid.innerHTML = buttons.join('');
 }
 
 function selectRunway(ident, hdg, el) {
@@ -1391,8 +1535,8 @@ async function runAnalysis() {
 
   try {
     const [metarRes, tafRes] = await Promise.all([
-      fetch(`https://api.checkwx.com/metar/${state.airport.icao}/decoded`, { headers: { 'X-API-Key': state.apiKey } }),
-      fetch(`https://api.checkwx.com/taf/${state.airport.icao}/decoded`,  { headers: { 'X-API-Key': state.apiKey } })
+      fetch(`https://api.checkwx.com/metar/${state.airport.icao}/decoded`, { headers: { 'X-Authorization': state.sarasa } }),
+      fetch(`https://api.checkwx.com/taf/${state.airport.icao}/decoded`,  { headers: { 'X-Authorization': state.sarasa } })
     ]);
     const metarData = await metarRes.json();
     const tafData   = await tafRes.json();
@@ -1682,8 +1826,8 @@ function toggleCollapsible(header) {
 // INIT
 // ═══════════════════════════════════════════════════
 renderAcTabs();
-if (!state.apiKey) {
-  setTimeout(() => showApiModal(), 500);
+if (!state.sarasa) {
+  setTimeout(() => mostrarConfig(), 500);
 }
 
 // SERVICE WORKER
