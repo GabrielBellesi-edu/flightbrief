@@ -984,12 +984,13 @@ function clearAirport() {
 
 async function fetchRunways(icao) {
   try {
-    const res = await fetch(`https://api.checkwx.com/station/${icao}/runways`, {
+    const res = await fetch(`https://api.checkwx.com/station/${icao}`, {
       headers: { 'X-API-Key': state.apiKey }
     });
     const data = await res.json();
-    if (data.data && data.data[0] && data.data[0].runways) {
-      state.runways = data.data[0].runways;
+    const station = data.data && data.data[0];
+    if (station && station.runways && station.runways.length) {
+      state.runways = station.runways;
       renderRunways(state.runways);
       document.getElementById('rwy-card').style.display = 'block';
       setBriefStatus('ok', `${state.runways.length} pistas encontradas`);
@@ -1543,6 +1544,8 @@ function renderTafView(ac, rwyHdg) {
     `;
   }).join('');
 
+  const tafDecoded = decodeMetar(state.tafRaw, state.airport.name);
+
   el.innerHTML = `
     <div class="card">
       <div class="card-title">Evolución TAF por período</div>
@@ -1555,6 +1558,18 @@ function renderTafView(ac, rwyHdg) {
       </div>
       <div class="collapsible-body">
         <div class="metar-raw-box">${escHtml(state.tafRaw)}</div>
+        <div class="decode-list" style="margin-top:12px">
+          ${tafDecoded.map(d => `
+            <div class="decode-item">
+              <div class="decode-token">${escHtml(d.token)}</div>
+              <div class="decode-desc">${d.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);font-size:0.78rem;color:var(--text3)">
+          <strong style="color:var(--text2)">Guía de claves TAF:</strong>
+          BECMG = cambio gradual permanente · TEMPO = cambio temporal (&lt;1h) · PROB30/40 = probabilidad 30% o 40% · FM = desde esa hora
+        </div>
       </div>
     </div>
   `;
@@ -1632,7 +1647,7 @@ function render7DayView(ac, rwyHdg) {
           <div class="tw-time">${String(w.start).padStart(2,'0')}:00 – ${String(w.end+1).padStart(2,'0')}:00</div>
           <div class="tw-verdict">${w.vc === 'go' ? '✓ GO' : w.vc === 'warn' ? '⚠ CAUT' : '✕ NO-GO'}</div>
           <div class="tw-details">
-            <span class="tw-chip">💨 ${avgWs}kt${avgWg > avgWs ? ' G'+avgWg : ''}</span>
+            <span class="tw-chip">💨 ${avgWs}kt${avgWg > avgWs ? ' Ráf.'+avgWg+'kt' : ''}</span>
             <span class="tw-chip">🌡️ ${avgT}°C</span>
             ${minV < 10 ? `<span class="tw-chip">👁️ ${minV}km</span>` : ''}
             ${minC < 99999 ? `<span class="tw-chip">☁️ ${minC}ft</span>` : ''}
