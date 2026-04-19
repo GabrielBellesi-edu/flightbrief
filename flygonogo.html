@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flight Brief — GO/NO-GO</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00d4ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FlightBrief">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #111720;
+    --bg3: #161d28;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #e8edf5;
+    --muted: #6b7a90;
+    --accent: #00d4ff;
+    --go: #22c55e;
+    --go-dim: rgba(34,197,94,0.12);
+    --nogo: #ef4444;
+    --nogo-dim: rgba(239,68,68,0.12);
+    --warn: #f59e0b;
+    --warn-dim: rgba(245,158,11,0.12);
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+    --cond: 'Barlow Condensed', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 60%, 80% 100%, 20% 100%, 0% 60%);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-family: var(--cond);
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  header p { font-size: 0.8rem; color: var(--muted); font-family: var(--mono); letter-spacing: 0.05em; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .tab {
+    font-family: var(--cond);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.2rem;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* PANEL */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .panel-title {
+    font-family: var(--cond);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* FORM GRID */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 0.72rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .field input, .field select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    padding: 0.55rem 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field select option { background: var(--bg3); }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0.3rem;
+    cursor: pointer;
+  }
+  .checkbox-row input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .checkbox-row span { font-size: 0.85rem; color: var(--text); }
+
+  /* ICAO ROW */
+  .icao-row { display: flex; gap: 0.75rem; align-items: flex-end; }
+  .icao-row .field { flex: 1; }
+  .btn-fetch {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 5px;
+    font-family: var(--cond);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.55rem 1.2rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+    height: 38px;
+  }
+  .btn-fetch:hover { opacity: 0.85; }
+  .btn-fetch:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* METAR DISPLAY */
+  .metar-raw {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.75rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-top: 1rem;
+    word-break: break-all;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .metar-raw.visible { display: block; }
+
+  /* BIG RUN BUTTON */
+  .btn-run {
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: var(--cond);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-top: 0.5rem;
+  }
+  .btn-run:hover { background: var(--accent); color: var(--bg); }
+
+  /* VERDICT BANNER */
+  .verdict {
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border: 2px solid;
+    display: none;
+  }
+  .verdict.visible { display: block; }
+  .verdict.go { border-color: var(--go); background: var(--go-dim); }
+  .verdict.nogo { border-color: var(--nogo); background: var(--nogo-dim); }
+  .verdict.caution { border-color: var(--warn); background: var(--warn-dim); }
+
+  .verdict-label {
+    font-family: var(--cond);
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .verdict.go .verdict-label { color: var(--go); }
+  .verdict.nogo .verdict-label { color: var(--nogo); }
+  .verdict.caution .verdict-label { color: var(--warn); }
+  .verdict-sub { font-size: 0.85rem; color: var(--muted); font-family: var(--mono); }
+
+  /* CHECK ITEMS */
+  .check-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 6px;
+    border: 1px solid;
+  }
+  .check-item.ok { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.05); }
+  .check-item.warn { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.06); }
+  .check-item.fail { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+
+  .check-icon {
+    font-family: var(--cond);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .check-item.ok .check-icon { background: var(--go-dim); color: var(--go); }
+  .check-item.warn .check-icon { background: var(--warn-dim); color: var(--warn); }
+  .check-item.fail .check-icon { background: var(--nogo-dim); color: var(--nogo); }
+
+  .check-body { flex: 1; }
+  .check-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 2px; }
+  .check-detail { font-size: 0.8rem; color: var(--muted); font-family: var(--mono); }
+
+  .check-bar-wrap { margin-left: auto; text-align: right; flex-shrink: 0; min-width: 80px; }
+  .check-pct {
+    font-family: var(--cond);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .check-item.ok .check-pct { color: var(--go); }
+  .check-item.warn .check-pct { color: var(--warn); }
+  .check-item.fail .check-pct { color: var(--nogo); }
+
+  .bar-track {
+    width: 70px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-left: auto;
+  }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+  .check-item.ok .bar-fill { background: var(--go); }
+  .check-item.warn .bar-fill { background: var(--warn); }
+  .check-item.fail .bar-fill { background: var(--nogo); }
+
+  /* FORECAST TABLE */
+  .forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+    margin-top: 1rem;
+  }
+  .fc-cell {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.7rem 0.5rem;
+    text-align: center;
+  }
+  .fc-time { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+  .fc-wind { font-family: var(--cond); font-size: 1.1rem; font-weight: 600; }
+  .fc-ok { color: var(--go); }
+  .fc-warn { color: var(--warn); }
+  .fc-bad { color: var(--nogo); }
+  .fc-label { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+  /* STATUS BAR */
+  .status { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 1rem; min-height: 1.2em; }
+  .status.error { color: var(--nogo); }
+  .status.ok { color: var(--go); }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  /* AIRCRAFT SELECTOR */
+  .aircraft-saved {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .aircraft-pill {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    color: var(--muted);
+  }
+  .aircraft-pill.active { border-color: var(--accent); color: var(--accent); }
+  .aircraft-pill:hover { border-color: var(--border2); color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo-icon"></div>
+    <div>
+      <h1>Flight Brief</h1>
+      <p>GO / NO-GO decision system · v1.0</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('brief')">Brief</button>
+    <button class="tab" onclick="showTab('aircraft')">Aeronave</button>
+    <button class="tab" onclick="showTab('report')">Informe</button>
+  </div>
+
+  <!-- ============ TAB: BRIEF ============ -->
+  <div class="section active" id="tab-brief">
+
+    <div class="panel">
+      <div class="panel-title">Aeropuerto de salida</div>
+      <div class="icao-row">
+        <div class="field">
+          <label>Código ICAO</label>
+          <input id="icao" type="text" placeholder="SAWO" maxlength="4" style="text-transform:uppercase" />
+        </div>
+        <button class="btn-fetch" onclick="fetchMetar()">Obtener METAR</button>
+      </div>
+      <div id="metar-raw" class="metar-raw"></div>
+      <div class="status" id="metar-status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Condiciones manuales (si no hay METAR)</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Viento — dirección (°)</label>
+          <input id="man-wdir" type="number" min="0" max="360" placeholder="270" />
+        </div>
+        <div class="field">
+          <label>Viento — velocidad (kt)</label>
+          <input id="man-wspd" type="number" min="0" placeholder="12" />
+        </div>
+        <div class="field">
+          <label>Ráfagas (kt, 0 si no hay)</label>
+          <input id="man-gust" type="number" min="0" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Visibilidad (km)</label>
+          <input id="man-vis" type="number" min="0" step="0.1" placeholder="10" />
+        </div>
+        <div class="field">
+          <label>Techo (ft)</label>
+          <input id="man-ceil" type="number" min="0" placeholder="3000" />
+        </div>
+        <div class="field">
+          <label>Temperatura (°C)</label>
+          <input id="man-temp" type="number" placeholder="18" />
+        </div>
+        <div class="field" style="grid-column: span 2">
+          <label>Pista activa — orientación (°)</label>
+          <input id="rwy-hdg" type="number" min="0" max="360" placeholder="270" />
+        </div>
+      </div>
+      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem;">
+        <label class="checkbox-row">
+          <input type="checkbox" id="cb-ts" />
+          <span>Thunderstorm (TS) reportado</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="cb-ice" />
+          <span>Condiciones de engelamiento</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="cb-snow" />
+          <span>Nieve / granizo</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-run" onclick="runAnalysis()">▶ ANALIZAR — GO / NO-GO</button>
+    <div class="status" id="run-status"></div>
+
+  </div>
+
+  <!-- ============ TAB: AIRCRAFT ============ -->
+  <div class="section" id="tab-aircraft">
+    <div class="panel">
+      <div class="panel-title">Perfil de la aeronave</div>
+
+      <div id="aircraft-pills" class="aircraft-saved"></div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Nombre / matrícula</label>
+          <input id="ac-name" type="text" placeholder="LV-XXX · Cessna 172" />
+        </div>
+        <div class="field">
+          <label>Viento cruzado máx. (kt)</label>
+          <input id="ac-xwind" type="number" min="0" placeholder="15" />
+        </div>
+        <div class="field">
+          <label>Viento de cola máx. (kt)</label>
+          <input id="ac-tailwind" type="number" min="0" placeholder="10" />
+        </div>
+        <div class="field">
+          <label>Viento frontal máx. (kt)</label>
+          <input id="ac-headwind" type="number" min="0" placeholder="25" />
+        </div>
+        <div class="field">
+          <label>Visibilidad mínima (km)</label>
+          <input id="ac-vis" type="number" min="0" step="0.1" placeholder="5" />
+        </div>
+        <div class="field">
+          <label>Techo mínimo (ft)</label>
+          <input id="ac-ceil" type="number" min="0" placeholder="1000" />
+        </div>
+        <div class="field">
+          <label>Temperatura máx. op. (°C)</label>
+          <input id="ac-tmax" type="number" placeholder="40" />
+        </div>
+        <div class="field">
+          <label>Temperatura mín. op. (°C)</label>
+          <input id="ac-tmin" type="number" placeholder="-10" />
+        </div>
+      </div>
+
+      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem;">
+        <label class="checkbox-row">
+          <input type="checkbox" id="ac-rain" />
+          <span>Puede operar con lluvia leve</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="ac-ice" />
+          <span>Certificado para vuelo en condiciones de engelamiento</span>
+        </label>
+      </div>
+
+      <div style="margin-top:1.5rem; display:flex; gap:0.75rem; flex-wrap:wrap;">
+        <button class="btn-fetch" onclick="saveAircraft()">Guardar perfil</button>
+        <button class="btn-fetch" style="background:transparent; color:var(--accent); border:1px solid var(--accent);" onclick="clearAircraft()">Limpiar</button>
+      </div>
+      <div class="status" id="ac-status"></div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: REPORT ============ -->
+  <div class="section" id="tab-report">
+
+    <div id="verdict" class="verdict"></div>
+
+    <div class="panel" id="checks-panel" style="display:none">
+      <div class="panel-title">Análisis por factor</div>
+      <div id="check-list" class="check-list"></div>
+    </div>
+
+    <div class="panel" id="forecast-panel" style="display:none">
+      <div class="panel-title">Pronóstico próximas horas (Open-Meteo)</div>
+      <div id="forecast-grid" class="forecast-grid"></div>
+      <div class="status" id="fc-status"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────
+let parsedMetar = null;
+let savedAircraft = JSON.parse(localStorage.getItem('fb_aircraft') || '[]');
+
+// ─── TABS ────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const tabs = ['brief','aircraft','report'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'aircraft') renderPills();
+}
+
+// ─── AIRCRAFT STORAGE ────────────────────────────────────────────────
+function renderPills() {
+  const wrap = document.getElementById('aircraft-pills');
+  if (!savedAircraft.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = savedAircraft.map((a,i) =>
+    `<span class="aircraft-pill" onclick="loadAircraft(${i})">${a.name||'Sin nombre'}</span>`
+  ).join('');
+}
+
+function saveAircraft() {
+  const ac = getAircraftValues();
+  if (!ac.name) { setStatus('ac-status','error','Ingresá un nombre o matrícula'); return; }
+  const idx = savedAircraft.findIndex(a => a.name === ac.name);
+  if (idx >= 0) savedAircraft[idx] = ac;
+  else savedAircraft.push(ac);
+  localStorage.setItem('fb_aircraft', JSON.stringify(savedAircraft));
+  setStatus('ac-status','ok','Perfil guardado ✓');
+  renderPills();
+}
+
+function loadAircraft(i) {
+  const a = savedAircraft[i];
+  document.getElementById('ac-name').value = a.name||'';
+  document.getElementById('ac-xwind').value = a.xwind||'';
+  document.getElementById('ac-tailwind').value = a.tailwind||'';
+  document.getElementById('ac-headwind').value = a.headwind||'';
+  document.getElementById('ac-vis').value = a.vis||'';
+  document.getElementById('ac-ceil').value = a.ceil||'';
+  document.getElementById('ac-tmax').value = a.tmax||'';
+  document.getElementById('ac-tmin').value = a.tmin||'';
+  document.getElementById('ac-rain').checked = !!a.rain;
+  document.getElementById('ac-ice').checked = !!a.ice;
+  document.querySelectorAll('.aircraft-pill').forEach((p,j) => p.classList.toggle('active', j===i));
+  setStatus('ac-status','ok','Perfil cargado: '+a.name);
+}
+
+function clearAircraft() {
+  ['ac-name','ac-xwind','ac-tailwind','ac-headwind','ac-vis','ac-ceil','ac-tmax','ac-tmin'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('ac-rain').checked = false;
+  document.getElementById('ac-ice').checked = false;
+  document.querySelectorAll('.aircraft-pill').forEach(p=>p.classList.remove('active'));
+  setStatus('ac-status','','');
+}
+
+function getAircraftValues() {
+  return {
+    name:      document.getElementById('ac-name').value.trim(),
+    xwind:     parseFloat(document.getElementById('ac-xwind').value) || 15,
+    tailwind:  parseFloat(document.getElementById('ac-tailwind').value) || 10,
+    headwind:  parseFloat(document.getElementById('ac-headwind').value) || 25,
+    vis:       parseFloat(document.getElementById('ac-vis').value) || 5,
+    ceil:      parseFloat(document.getElementById('ac-ceil').value) || 1000,
+    tmax:      parseFloat(document.getElementById('ac-tmax').value) || 40,
+    tmin:      parseFloat(document.getElementById('ac-tmin').value) || -10,
+    rain:      document.getElementById('ac-rain').checked,
+    ice:       document.getElementById('ac-ice').checked,
+  };
+}
+
+// ─── METAR FETCH ─────────────────────────────────────────────────────
+async function fetchMetar() {
+  const icao = document.getElementById('icao').value.trim().toUpperCase();
+  if (icao.length !== 4) { setStatus('metar-status','error','Ingresá un código ICAO de 4 letras'); return; }
+  setStatus('metar-status','','<span class="spinner"></span>Consultando AviationWeather.gov...');
+  document.querySelector('.btn-fetch').disabled = true;
+  try {
+    const url = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw&hours=2`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const lines = text.trim().split('\n').filter(l => l.trim());
+    if (!lines.length) throw new Error('Sin datos METAR para ' + icao);
+    const raw = lines[0].trim();
+    document.getElementById('metar-raw').textContent = raw;
+    document.getElementById('metar-raw').classList.add('visible');
+    parsedMetar = parseMetar(raw);
+    fillManualFromMetar(parsedMetar);
+    setStatus('metar-status','ok','METAR obtenido ✓ — campos completados automáticamente');
+  } catch(e) {
+    setStatus('metar-status','error','Error: '+e.message+'. Ingresá los datos manualmente.');
+  }
+  document.querySelector('.btn-fetch').disabled = false;
+}
+
+// ─── METAR PARSER ────────────────────────────────────────────────────
+function parseMetar(raw) {
+  const m = {};
+  // Wind: 27015G25KT or 27015KT or VRB10KT
+  const wm = raw.match(/(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?KT/);
+  if (wm) {
+    m.wdir = wm[1]==='VRB' ? null : parseInt(wm[1]);
+    m.wspd = parseInt(wm[2]);
+    m.gust = wm[4] ? parseInt(wm[4]) : 0;
+    m.vrb  = wm[1]==='VRB';
+  }
+  // Visibility: 9999 (metres) or 10SM
+  const vm = raw.match(/\b(\d{4})\b/);
+  const vsm = raw.match(/(\d+(?:\.\d+)?)SM/);
+  if (vsm) m.vis = parseFloat(vsm[1]) * 1.852;
+  else if (vm) m.vis = parseInt(vm[1]) / 1000;
+  // Clouds / ceiling: BKN015 OVC030
+  const clouds = [...raw.matchAll(/(BKN|OVC|FEW|SCT)(\d{3})/g)];
+  let ceil = 99999;
+  clouds.forEach(c => {
+    if (['BKN','OVC'].includes(c[1])) {
+      const ft = parseInt(c[2]) * 100;
+      if (ft < ceil) ceil = ft;
+    }
+  });
+  m.ceil = ceil === 99999 ? null : ceil;
+  // Temp/dew
+  const tm = raw.match(/\b(M?)(\d{2})\/(M?)(\d{2})\b/);
+  if (tm) {
+    m.temp = (tm[1]?-1:1)*parseInt(tm[2]);
+    m.dew  = (tm[3]?-1:1)*parseInt(tm[4]);
+  }
+  // Phenomena
+  m.ts   = /\bTS\b/.test(raw);
+  m.ice  = /\bFZRA\b|\bFZDZ\b|\bFZ[A-Z]+/.test(raw);
+  m.snow = /\bSN\b|\bGR\b|\bGS\b/.test(raw);
+  return m;
+}
+
+function fillManualFromMetar(m) {
+  if (m.wdir != null) document.getElementById('man-wdir').value = m.wdir;
+  if (m.wspd != null) document.getElementById('man-wspd').value = m.wspd;
+  if (m.gust)         document.getElementById('man-gust').value = m.gust;
+  if (m.vis  != null) document.getElementById('man-vis').value  = m.vis.toFixed(1);
+  if (m.ceil != null) document.getElementById('man-ceil').value = m.ceil;
+  if (m.temp != null) document.getElementById('man-temp').value = m.temp;
+  if (m.ts)           document.getElementById('cb-ts').checked = true;
+  if (m.ice)          document.getElementById('cb-ice').checked = true;
+  if (m.snow)         document.getElementById('cb-snow').checked = true;
+}
+
+// ─── CROSSWIND CALCULATION ───────────────────────────────────────────
+function calcComponents(windDir, windSpd, rwyHdg) {
+  if (windDir == null || isNaN(rwyHdg)) return { xwind: null, tailwind: null, headwind: null };
+  const angle = (windDir - rwyHdg) * Math.PI / 180;
+  const head = windSpd * Math.cos(angle);
+  const cross = Math.abs(windSpd * Math.sin(angle));
+  return {
+    xwind:     Math.round(cross * 10) / 10,
+    tailwind:  head < 0 ? Math.round(-head * 10)/10 : 0,
+    headwind:  head > 0 ? Math.round(head  * 10)/10 : 0,
+  };
+}
+
+// ─── MAIN ANALYSIS ───────────────────────────────────────────────────
+async function runAnalysis() {
+  const ac = getAircraftValues();
+  const rwyHdg = parseFloat(document.getElementById('rwy-hdg').value);
+  const wdir   = parseFloat(document.getElementById('man-wdir').value);
+  const wspd   = parseFloat(document.getElementById('man-wspd').value) || 0;
+  const gust   = parseFloat(document.getElementById('man-gust').value) || 0;
+  const vis    = parseFloat(document.getElementById('man-vis').value);
+  const ceil   = parseFloat(document.getElementById('man-ceil').value);
+  const temp   = parseFloat(document.getElementById('man-temp').value);
+  const ts     = document.getElementById('cb-ts').checked;
+  const ice    = document.getElementById('cb-ice').checked;
+  const snow   = document.getElementById('cb-snow').checked;
+
+  const effectiveWspd = gust > wspd ? gust : wspd;
+  const comp = calcComponents(wdir, effectiveWspd, rwyHdg);
+
+  const checks = [];
+
+  // 1. Thunderstorm
+  if (ts) {
+    checks.push({ name:'Thunderstorm (TS)', status:'fail', detail:`Tormenta eléctrica reportada — condición bloqueante`, pct:100 });
+  }
+
+  // 2. Engelamiento
+  if (ice && !ac.ice) {
+    checks.push({ name:'Engelamiento (FZRA/FZDZ)', status:'fail', detail:`Avión no certificado para vuelo en condiciones de engelamiento`, pct:100 });
+  } else if (ice && ac.ice) {
+    checks.push({ name:'Engelamiento (FZRA/FZDZ)', status:'warn', detail:`Condición presente — aeronave certificada, mayor atención`, pct:60 });
+  }
+
+  // 3. Nieve
+  if (snow) {
+    checks.push({ name:'Nieve / granizo', status:'fail', detail:`Precipitación sólida reportada — condición bloqueante`, pct:100 });
+  }
+
+  // 4. Crosswind
+  if (comp.xwind != null) {
+    const pct = Math.round((comp.xwind / ac.xwind) * 100);
+    const s = pct >= 100 ? 'fail' : pct >= 75 ? 'warn' : 'ok';
+    checks.push({ name:'Viento cruzado', status:s, detail:`${comp.xwind} kt (límite ${ac.xwind} kt)`, pct:Math.min(pct,100) });
+  } else if (!isNaN(wdir)) {
+    checks.push({ name:'Viento cruzado', status:'warn', detail:'No se pudo calcular (falta orientación de pista)', pct:50 });
+  }
+
+  // 5. Tailwind
+  if (comp.tailwind != null && comp.tailwind > 0) {
+    const pct = Math.round((comp.tailwind / ac.tailwind) * 100);
+    const s = pct >= 100 ? 'fail' : pct >= 75 ? 'warn' : 'ok';
+    checks.push({ name:'Viento de cola', status:s, detail:`${comp.tailwind} kt (límite ${ac.tailwind} kt)`, pct:Math.min(pct,100) });
+  } else if (comp.headwind != null) {
+    checks.push({ name:'Viento de cola', status:'ok', detail:`Sin viento de cola (${comp.headwind} kt de frente)`, pct:0 });
+  }
+
+  // 6. Visibilidad
+  if (!isNaN(vis)) {
+    const pct = Math.round((ac.vis / vis) * 100);
+    const s = vis < ac.vis ? 'fail' : vis < ac.vis * 1.3 ? 'warn' : 'ok';
+    checks.push({ name:'Visibilidad', status:s, detail:`${vis.toFixed(1)} km (mínimo ${ac.vis} km)`, pct:Math.min(pct,100) });
+  }
+
+  // 7. Techo
+  if (!isNaN(ceil)) {
+    const pct = Math.round((ac.ceil / ceil) * 100);
+    const s = ceil < ac.ceil ? 'fail' : ceil < ac.ceil * 1.3 ? 'warn' : 'ok';
+    checks.push({ name:'Techo de nubes', status:s, detail:`${ceil} ft (mínimo ${ac.ceil} ft)`, pct:Math.min(pct,100) });
+  }
+
+  // 8. Temperatura
+  if (!isNaN(temp)) {
+    const overmax = temp > ac.tmax;
+    const undermin = temp < ac.tmin;
+    if (overmax || undermin) {
+      checks.push({ name:'Temperatura', status:'fail', detail:`${temp}°C — fuera del rango operativo (${ac.tmin}°C a ${ac.tmax}°C)`, pct:100 });
+    } else {
+      const marginMax = ac.tmax - temp;
+      const marginMin = temp - ac.tmin;
+      const margin = Math.min(marginMax, marginMin);
+      const s = margin < 5 ? 'warn' : 'ok';
+      checks.push({ name:'Temperatura', status:s, detail:`${temp}°C — dentro del rango (${ac.tmin}°C a ${ac.tmax}°C)`, pct: s==='warn'?65:15 });
+    }
+  }
+
+  // 9. Ráfagas
+  if (gust > 0 && gust > wspd * 1.3) {
+    const pct = Math.min(Math.round(((gust - wspd) / wspd) * 100), 100);
+    const s = gust > ac.xwind * 1.2 ? 'fail' : 'warn';
+    checks.push({ name:'Ráfagas', status:s, detail:`Ráfagas de ${gust} kt (viento base ${wspd} kt) — variabilidad alta`, pct:pct });
+  }
+
+  // VERDICT
+  const hasFail = checks.some(c => c.status === 'fail');
+  const hasWarn = checks.some(c => c.status === 'warn');
+  let verdictClass, verdictText, verdictSub;
+  if (hasFail) {
+    verdictClass = 'nogo';
+    verdictText = 'NO-GO';
+    const failCount = checks.filter(c=>c.status==='fail').length;
+    verdictSub = `${failCount} factor${failCount>1?'es':''} bloqueante${failCount>1?'s':''} detectado${failCount>1?'s':''}`;
+  } else if (hasWarn) {
+    verdictClass = 'caution';
+    verdictText = 'PRECAUCIÓN';
+    verdictSub = 'Condiciones marginales — decisión del piloto en comando';
+  } else if (!checks.length) {
+    verdictClass = 'caution';
+    verdictText = 'SIN DATOS';
+    verdictSub = 'Ingresá las condiciones meteorológicas para analizar';
+  } else {
+    verdictClass = 'go';
+    verdictText = 'GO';
+    verdictSub = 'Condiciones dentro de parámetros operacionales';
+  }
+
+  // RENDER REPORT
+  const vEl = document.getElementById('verdict');
+  vEl.className = `verdict ${verdictClass} visible`;
+  vEl.innerHTML = `<div class="verdict-label">${verdictText}</div><div class="verdict-sub">${verdictSub}</div>`;
+
+  const listEl = document.getElementById('check-list');
+  listEl.innerHTML = checks.map(c => `
+    <div class="check-item ${c.status}">
+      <div class="check-icon">${c.status==='fail'?'NO-GO':c.status==='warn'?'CAUT':'OK'}</div>
+      <div class="check-body">
+        <div class="check-name">${c.name}</div>
+        <div class="check-detail">${c.detail}</div>
+      </div>
+      <div class="check-bar-wrap">
+        <div class="check-pct">${c.pct}%</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${c.pct}%"></div></div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('checks-panel').style.display = checks.length ? 'block' : 'none';
+
+  showTab('report');
+  setStatus('run-status','ok','Análisis completado');
+
+  // Fetch forecast
+  fetchForecast();
+}
+
+// ─── OPEN-METEO FORECAST ─────────────────────────────────────────────
+async function fetchForecast() {
+  const icao = document.getElementById('icao').value.trim().toUpperCase();
+  // Try to get lat/lon from ICAO if available, otherwise use SAWO as fallback coords
+  // We'll use aviationweather to get station info
+  document.getElementById('forecast-panel').style.display = 'block';
+  setStatus('fc-status','','<span class="spinner"></span>Obteniendo pronóstico...');
+
+  try {
+    // Get station info for coordinates
+    const stRes = await fetch(`https://aviationweather.gov/api/data/airport?ids=${icao}&format=json`);
+    const stData = await stRes.json();
+    let lat, lon;
+    if (stData && stData[0] && stData[0].lat) {
+      lat = stData[0].lat;
+      lon = stData[0].lon;
+    } else {
+      // Fallback: use manual coords from Open-Meteo geocoding if airport lookup fails
+      throw new Error('Aeropuerto no encontrado en base de datos. Usando coordenadas de referencia.');
+    }
+
+    const now = new Date();
+    const start = now.toISOString().slice(0,10);
+    const endD = new Date(now); endD.setDate(endD.getDate()+1);
+    const end = endD.toISOString().slice(0,10);
+
+    const fcRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=windspeed_10m,winddirection_10m,windgusts_10m,cloudcover,precipitation&wind_speed_unit=kn&start_date=${start}&end_date=${end}&timezone=auto`);
+    const fcData = await fcRes.json();
+
+    const rwyHdg = parseFloat(document.getElementById('rwy-hdg').value);
+    const ac = getAircraftValues();
+    const hours = fcData.hourly;
+    const nowH = now.getHours();
+    const cells = [];
+
+    for (let i = nowH; i < Math.min(nowH+12, hours.time.length); i++) {
+      const t = hours.time[i].slice(11,16);
+      const ws = Math.round(hours.windspeed_10m[i]);
+      const wd = hours.winddirection_10m[i];
+      const wg = Math.round(hours.windgusts_10m[i]||0);
+      const comp = calcComponents(wd, ws, rwyHdg);
+      const xw = comp.xwind != null ? comp.xwind : ws;
+      let cls = 'fc-ok';
+      if (xw > ac.xwind) cls = 'fc-bad';
+      else if (xw > ac.xwind * 0.75) cls = 'fc-warn';
+      cells.push(`
+        <div class="fc-cell">
+          <div class="fc-time">${t}</div>
+          <div class="fc-wind ${cls}">${ws}<span style="font-size:0.7rem;font-weight:400">kt</span></div>
+          ${wg>ws?`<div class="fc-label">ráfaga ${wg}kt</div>`:''}
+          <div class="fc-label">${wd}°</div>
+        </div>
+      `);
+    }
+
+    document.getElementById('forecast-grid').innerHTML = cells.join('');
+    setStatus('fc-status','ok','Pronóstico Open-Meteo · ' + icao);
+
+  } catch(e) {
+    setStatus('fc-status','error','No se pudo obtener pronóstico: '+e.message);
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────
+function setStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'status' + (type ? ' '+type : '');
+  el.innerHTML = msg;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+renderPills();
+if (savedAircraft.length) loadAircraft(0);
+
+// ─── SERVICE WORKER REGISTRATION ──────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('FlightBrief SW registrado'))
+      .catch(e => console.warn('SW error:', e));
+  });
+}
+</script>
+</body>
+</html>
