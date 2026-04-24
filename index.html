@@ -12,811 +12,356 @@
 <meta name="apple-mobile-web-app-title" content="FlightBrief">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --accent: #1a6bff;
-  --accent-light: #e8f0ff;
-  --go: #16a34a;
-  --go-bg: #f0fdf4;
-  --go-border: #bbf7d0;
-  --warn: #d97706;
-  --warn-bg: #fffbeb;
-  --warn-border: #fde68a;
-  --nogo: #dc2626;
-  --nogo-bg: #fef2f2;
-  --nogo-border: #fecaca;
-  --bg: #f8f9fc;
-  --surface: #ffffff;
-  --surface2: #f1f4f9;
-  --border: #e2e8f0;
-  --border2: #cbd5e1;
-  --text: #0f172a;
-  --text2: #475569;
-  --text3: #94a3b8;
-  --sans: 'DM Sans', sans-serif;
-  --mono: 'DM Mono', monospace;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-}
-[data-theme="dark"] {
-  --accent: #4d8fff;
-  --accent-light: #1a2a4a;
-  --go: #22c55e;
-  --go-bg: #052e16;
-  --go-border: #166534;
-  --warn: #f59e0b;
-  --warn-bg: #1c1300;
-  --warn-border: #78350f;
-  --nogo: #f87171;
-  --nogo-bg: #1a0000;
-  --nogo-border: #7f1d1d;
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #1e2530;
-  --border: #2d3748;
-  --border2: #4a5568;
-  --text: #f1f5f9;
-  --text2: #94a3b8;
-  --text3: #475569;
-  --shadow: 0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { font-size: 16px; }
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  transition: background 0.2s, color 0.2s;
-  padding-bottom: 80px;
-}
-
-/* TOPBAR */
-.topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 16px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow);
-}
-.topbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.topbar-logo img {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-}
-.topbar-logo span {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
-.topbar-logo span em {
-  font-style: normal;
-  color: var(--accent);
-}
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-.theme-btn {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  color: var(--text2);
-  transition: background 0.15s;
-}
-.theme-btn:hover { background: var(--border); }
-
-/* BADGE */
-.api-badge {
-  font-size: 11px;
-  font-family: var(--mono);
-  background: var(--accent-light);
-  color: var(--accent);
-  padding: 4px 10px;
-  border-radius: 20px;
-  cursor: pointer;
-  border: none;
-  font-weight: 500;
-}
-
-/* BOTTOM NAV */
-.bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  display: flex;
-  z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 0 8px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: var(--text3);
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 500;
-  gap: 4px;
-  transition: color 0.15s;
-}
-.nav-item.active { color: var(--accent); }
-.nav-icon { font-size: 20px; line-height: 1; }
-
-/* SCREENS */
-.screen { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
-.screen.active { display: block; }
-
-/* CARDS */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
-}
-.card-title {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 12px;
-}
-
-/* SEARCH */
-.search-wrap { position: relative; margin-bottom: 8px; }
-.search-input {
-  width: 100%;
-  height: 48px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 1rem;
-  padding: 0 16px 0 44px;
-  outline: none;
-  text-transform: uppercase;
-  transition: border-color 0.15s;
-}
-.search-input::placeholder { text-transform: none; font-family: var(--sans); color: var(--text3); }
-.search-input:focus { border-color: var(--accent); }
-.search-icon {
-  position: absolute;
-  left: 14px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--text3);
-  font-size: 18px;
-  pointer-events: none;
-}
-.search-results {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  display: none;
-}
-.search-results.visible { display: block; }
-.search-result-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.1s;
-}
-.search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: var(--surface2); }
-.sri-icao { font-family: var(--mono); font-weight: 500; font-size: 0.9rem; color: var(--accent); }
-.sri-name { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
-
-/* AIRPORT SELECTED */
-.airport-selected {
-  background: var(--accent-light);
-  border: 1.5px solid var(--accent);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  display: none;
-  margin-bottom: 8px;
-}
-.airport-selected.visible { display: flex; align-items: center; justify-content: space-between; }
-.as-info { }
-.as-icao { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: 1rem; }
-.as-name { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
-.as-clear { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; padding: 4px; }
-
-/* RUNWAYS */
-.rwy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.rwy-btn {
-  padding: 12px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  text-align: center;
-  transition: border-color 0.15s, background 0.15s;
-  font-family: var(--sans);
-}
-.rwy-btn:hover { border-color: var(--accent); }
-.rwy-btn.selected { border-color: var(--accent); background: var(--accent-light); }
-.rwy-code { font-family: var(--mono); font-weight: 600; font-size: 1rem; color: var(--text); }
-.rwy-btn.selected .rwy-code { color: var(--accent); }
-.rwy-hdg { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
-
-/* AIRCRAFT SELECTOR */
-.ac-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.ac-tab {
-  padding: 7px 14px;
-  border-radius: 20px;
-  border: 1.5px solid var(--border);
-  background: var(--surface2);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text2);
-  font-family: var(--sans);
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.ac-tab:hover { border-color: var(--accent); color: var(--accent); }
-.ac-tab.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
-
-.ac-specs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 10px;
-}
-.ac-spec {
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-}
-.ac-spec-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-.ac-spec-val { font-family: var(--mono); font-size: 0.95rem; font-weight: 500; color: var(--text); }
-
-/* ANALYZE BUTTON */
-.btn-analyze {
-  width: 100%;
-  height: 52px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  font-family: var(--sans);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 4px;
-  transition: opacity 0.15s, transform 0.1s;
-  letter-spacing: -0.01em;
-}
-.btn-analyze:hover { opacity: 0.9; }
-.btn-analyze:active { transform: scale(0.98); }
-.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* STATUS */
-.status-msg {
-  font-size: 0.8rem;
-  color: var(--text3);
-  text-align: center;
-  margin-top: 8px;
-  min-height: 20px;
-  font-family: var(--mono);
-}
-.status-msg.error { color: var(--nogo); }
-.status-msg.ok { color: var(--go); }
-
-/* SPINNER */
-.spin {
-  display: inline-block;
-  width: 14px; height: 14px;
-  border: 2px solid var(--border2);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* VERDICT */
-.verdict-banner {
-  border-radius: var(--radius);
-  padding: 24px 20px;
-  text-align: center;
-  margin-bottom: 12px;
-  border: 2px solid;
-}
-.verdict-banner.go { background: var(--go-bg); border-color: var(--go-border); }
-.verdict-banner.warn { background: var(--warn-bg); border-color: var(--warn-border); }
-.verdict-banner.nogo { background: var(--nogo-bg); border-color: var(--nogo-border); }
-.verdict-label {
-  font-size: 2.5rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-.verdict-banner.go .verdict-label { color: var(--go); }
-.verdict-banner.warn .verdict-label { color: var(--warn); }
-.verdict-banner.nogo .verdict-label { color: var(--nogo); }
-.verdict-sub { font-size: 0.85rem; color: var(--text2); }
-.verdict-meta { font-size: 0.75rem; color: var(--text3); margin-top: 6px; font-family: var(--mono); }
-
-/* VIEW TABS */
-.view-tabs {
-  display: flex;
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  margin-bottom: 12px;
-  gap: 2px;
-}
-.view-tab {
-  flex: 1;
-  padding: 8px 4px;
-  border: none;
-  background: none;
-  border-radius: 6px;
-  font-family: var(--sans);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text3);
-  transition: all 0.15s;
-}
-.view-tab.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
-}
-
-/* CHECK ITEMS */
-.check-list { display: flex; flex-direction: column; gap: 8px; }
-.check-item {
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  border: 1px solid;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.check-item.ok { background: var(--go-bg); border-color: var(--go-border); }
-.check-item.warn { background: var(--warn-bg); border-color: var(--warn-border); }
-.check-item.fail { background: var(--nogo-bg); border-color: var(--nogo-border); }
-.check-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.check-item.ok .check-dot { background: var(--go); }
-.check-item.warn .check-dot { background: var(--warn); }
-.check-item.fail .check-dot { background: var(--nogo); }
-.check-body { flex: 1; min-width: 0; }
-.check-name { font-size: 0.875rem; font-weight: 500; color: var(--text); }
-.check-detail { font-size: 0.75rem; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
-.check-pct {
-  font-family: var(--mono);
-  font-size: 0.875rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-.check-item.ok .check-pct { color: var(--go); }
-.check-item.warn .check-pct { color: var(--warn); }
-.check-item.fail .check-pct { color: var(--nogo); }
-
-/* METAR DECODE */
-.metar-raw-box {
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--accent);
-  word-break: break-all;
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-.decode-list { display: flex; flex-direction: column; gap: 6px; }
-.decode-item {
-  display: flex;
-  gap: 10px;
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-.decode-token {
-  font-family: var(--mono);
-  font-weight: 500;
-  color: var(--accent);
-  flex-shrink: 0;
-  min-width: 80px;
-}
-.decode-desc { color: var(--text2); }
-
-/* TAF TABLE */
-.taf-list { display: flex; flex-direction: column; gap: 8px; }
-.taf-period {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.taf-period-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--surface2);
-}
-.taf-period-time { font-family: var(--mono); font-size: 0.8rem; color: var(--text2); }
-.taf-period-type {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 10px;
-  letter-spacing: 0.05em;
-}
-.taf-type-base { background: var(--accent-light); color: var(--accent); }
-.taf-type-tempo { background: var(--warn-bg); color: var(--warn); }
-.taf-type-becmg { background: var(--surface); color: var(--text2); border: 1px solid var(--border); }
-.taf-period-verdict {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 10px;
-}
-.taf-period-verdict.go { background: var(--go-bg); color: var(--go); }
-.taf-period-verdict.warn { background: var(--warn-bg); color: var(--warn); }
-.taf-period-verdict.nogo { background: var(--nogo-bg); color: var(--nogo); }
-.taf-period-body { padding: 10px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.taf-cell-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
-.taf-cell-val { font-family: var(--mono); font-size: 0.85rem; color: var(--text); margin-top: 1px; }
-
-/* 7-DAY WINDOWS */
-.day-block { margin-bottom: 16px; }
-.day-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 8px;
-  padding-left: 4px;
-}
-.window-list { display: flex; flex-direction: column; gap: 6px; }
-.time-window {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.time-window.go { background: var(--go-bg); border-color: var(--go-border); }
-.time-window.warn { background: var(--warn-bg); border-color: var(--warn-border); }
-.time-window.nogo { background: var(--nogo-bg); border-color: var(--nogo-border); }
-.tw-time { font-family: var(--mono); font-size: 0.8rem; color: var(--text2); flex-shrink: 0; min-width: 90px; }
-.tw-verdict {
-  font-size: 0.75rem;
-  font-weight: 600;
-  flex-shrink: 0;
-  width: 50px;
-  text-align: center;
-}
-.time-window.go .tw-verdict { color: var(--go); }
-.time-window.warn .tw-verdict { color: var(--warn); }
-.time-window.nogo .tw-verdict { color: var(--nogo); }
-.tw-details { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
-.tw-chip {
-  font-size: 0.7rem;
-  font-family: var(--mono);
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text2);
-}
-
-/* AIRCRAFT SCREEN */
-.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-.field label { font-size: 0.75rem; font-weight: 500; color: var(--text2); }
-.field input, .field select {
-  height: 44px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 0.9rem;
-  padding: 0 14px;
-  outline: none;
-  transition: border-color 0.15s;
-  width: 100%;
-}
-.field input:focus, .field select:focus { border-color: var(--accent); }
-.field select option { background: var(--surface); }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-.checkbox-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-}
-.checkbox-row:last-child { border-bottom: none; }
-.checkbox-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-.checkbox-row span { font-size: 0.875rem; color: var(--text); }
-
-.btn-secondary {
-  height: 44px;
-  padding: 0 20px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-.btn-row { display: flex; gap: 8px; margin-top: 4px; }
-
-/* MODAL */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 200;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 0;
-}
-.modal-overlay.visible { display: flex; }
-.modal {
-  background: var(--surface);
-  border-radius: var(--radius) var(--radius) 0 0;
-  padding: 24px 20px 40px;
-  width: 100%;
-  max-width: 600px;
-}
-.modal h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
-.modal p { font-size: 0.85rem; color: var(--text2); margin-bottom: 16px; }
-.modal input {
-  width: 100%;
-  height: 44px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  padding: 0 14px;
-  outline: none;
-  margin-bottom: 12px;
-}
-.modal input:focus { border-color: var(--accent); }
-.modal-btn {
-  width: 100%;
-  height: 48px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--sans);
-}
-
-/* COLLAPSIBLE */
-.collapsible-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 4px 0;
-  margin-bottom: 0;
-}
-.collapsible-header .card-title { margin-bottom: 0; }
-.collapsible-arrow { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
-.collapsible-body { display: none; margin-top: 12px; }
-.collapsible-body.open { display: block; }
-.collapsible-arrow.open { transform: rotate(180deg); }
-
-/* EMPTY STATE */
-.empty-state {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--text3);
-}
-.empty-icon { font-size: 48px; margin-bottom: 12px; }
-.empty-title { font-size: 1rem; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
-.empty-desc { font-size: 0.85rem; }
-
-/* DIVIDER */
-.divider { height: 1px; background: var(--border); margin: 12px 0; }
-
-.pill {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-  letter-spacing: 0.04em;
-}
-.pill-go { background: var(--go-bg); color: var(--go); }
-.pill-warn { background: var(--warn-bg); color: var(--warn); }
-.pill-nogo { background: var(--nogo-bg); color: var(--nogo); }
-</style>
+<link rel="stylesheet" href="app.css">
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">
+  <div class="topbar-logo" onclick="goHome()">
     <img src="icon-192.png" alt="FlightBrief" onerror="this.style.display='none'">
     <span>Flight<em>Brief</em></span>
   </div>
   <div class="topbar-right">
-    <button class="api-badge" onclick="mostrarConfig()">⚙</button>
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
+    <button class="icon-btn" onclick="mostrarConfig()" title="Configuración">⚙</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
   </div>
 </div>
 
-<!-- SCREENS -->
-<div class="screen active" id="screen-brief">
-
-  <div class="card">
-    <div class="card-title">Aeropuerto de salida</div>
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="icao-input" type="text" placeholder="Buscar por ICAO o nombre..." oninput="onIcaoInput(this.value)" />
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-content">
+    <div class="ios-banner" id="ios-banner">
+      <div class="ios-banner-icon">📲</div>
+      <div class="ios-banner-text">Para instalar FlightBrief en tu iPhone: tocá el botón <strong>Compartir</strong> (□↑) en Safari y luego <strong>"Agregar a pantalla de inicio"</strong>.</div>
+      <button class="ios-banner-close" onclick="dismissIosBanner()">✕</button>
     </div>
-    <div class="search-results" id="search-results"></div>
-    <div class="airport-selected" id="airport-selected">
-      <div class="as-info">
-        <div class="as-icao" id="as-icao"></div>
-        <div class="as-name" id="as-name"></div>
+    <div class="home-greeting">
+      <h2 id="home-greeting-text">FlightBrief</h2>
+      <p id="home-greeting-sub">¿Listo para volar?</p>
+    </div>
+    <div class="home-grid">
+      <div class="home-card" onclick="goToMet()">
+        <div class="home-card-icon">🌤️</div>
+        <div class="home-card-title">Meteorología</div>
+        <div class="home-card-desc">Brief, METAR, TAF y pronóstico extendido</div>
       </div>
-      <button class="as-clear" onclick="clearAirport()">✕</button>
+      <div class="home-card" onclick="goToFpl()">
+        <div class="home-card-icon">📋</div>
+        <div class="home-card-title">Plan de Vuelo</div>
+        <div class="home-card-desc">Formulario FPL ICAO con PDF y envío por mail</div>
+      </div>
+      <div class="home-card" onclick="showScreen('usuario')">
+        <div class="home-card-icon">👤</div>
+        <div class="home-card-title">Usuario</div>
+        <div class="home-card-desc">Datos personales y de contacto</div>
+      </div>
+      <div class="home-card" onclick="showScreen('aircraft')">
+        <div class="home-card-icon">✈️</div>
+        <div class="home-card-title">Aeronaves</div>
+        <div class="home-card-desc">Gestión de aeronaves y sus parámetros</div>
+      </div>
     </div>
   </div>
-
-  <div class="card" id="rwy-card" style="display:none">
-    <div class="card-title">Pista activa</div>
-    <div class="rwy-grid" id="rwy-grid"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Aeronave</div>
-    <div class="ac-tabs" id="ac-tabs"></div>
-    <div class="ac-specs" id="ac-specs"></div>
-  </div>
-
-  <button class="btn-analyze" id="btn-analyze" onclick="runAnalysis()" disabled>Analizar condiciones</button>
-  <div class="status-msg" id="brief-status"></div>
-
 </div>
 
+<!-- BRIEF -->
+<div class="screen" id="screen-brief">
+  <div class="screen-content">
+    <div class="card">
+      <div class="card-title">Aeropuerto de salida</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="icao-input" type="text" placeholder="Buscar por ICAO o nombre..." oninput="onIcaoInput(this.value)" />
+      </div>
+      <div class="search-results" id="search-results"></div>
+      <div class="airport-selected" id="airport-selected">
+        <div>
+          <div class="as-icao" id="as-icao"></div>
+          <div class="as-name" id="as-name"></div>
+        </div>
+        <button class="as-clear" onclick="clearAirport()">✕</button>
+      </div>
+    </div>
+    <div class="card" id="rwy-card" style="display:none">
+      <div class="card-title">Pista activa</div>
+      <div class="rwy-grid" id="rwy-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Aeronave</div>
+      <div id="ac-selector-content"></div>
+    </div>
+    <button class="btn-primary" id="btn-analyze" onclick="runAnalysis()" disabled>Analizar condiciones</button>
+    <div class="status-msg" id="brief-status"></div>
+  </div>
+</div>
+
+<!-- REPORT -->
 <div class="screen" id="screen-report">
-  <div id="report-empty" class="empty-state">
-    <div class="empty-icon">📋</div>
-    <div class="empty-title">Sin informe aún</div>
-    <div class="empty-desc">Seleccioná un aeropuerto y una aeronave en Brief para generar el análisis.</div>
-  </div>
-  <div id="report-content" style="display:none">
-    <div id="verdict-banner" class="verdict-banner"></div>
-    <div class="view-tabs">
-      <button class="view-tab active" onclick="showView('metar')">METAR</button>
-      <button class="view-tab" onclick="showView('taf')">TAF</button>
-      <button class="view-tab" onclick="showView('7dias')">7 días</button>
+  <div class="screen-content">
+    <div id="report-empty" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">Sin informe aún</div>
+      <div class="empty-desc">Completá el Brief para generar el análisis.</div>
     </div>
-    <div id="view-metar"></div>
-    <div id="view-taf" style="display:none"></div>
-    <div id="view-7dias" style="display:none"></div>
+    <div id="report-content" style="display:none">
+      <div id="verdict-banner" class="verdict-banner"></div>
+      <div class="view-tabs">
+        <button class="view-tab active" onclick="showView('metar')">METAR</button>
+        <button class="view-tab" onclick="showView('taf')">TAF</button>
+        <button class="view-tab" onclick="showView('7dias')">7 días</button>
+      </div>
+      <div id="view-metar"></div>
+      <div id="view-taf" style="display:none"></div>
+      <div id="view-7dias" style="display:none"></div>
+    </div>
   </div>
 </div>
 
-<div class="screen" id="screen-aircraft">
-  <div class="card">
-    <div class="card-title">Mis aeronaves</div>
-    <div class="ac-tabs" id="saved-ac-tabs" style="margin-bottom:12px"></div>
-    <div class="divider"></div>
-    <div style="margin-top:12px">
+<!-- FPL -->
+<div class="screen" id="screen-fpl">
+  <div class="screen-content">
+    <div class="fpl-suggest" id="fpl-suggest" onclick="autoFillFpl()"></div>
+    <div class="card">
+      <div class="card-title">Identificación del vuelo</div>
+      <div class="form-grid">
+        <div class="field"><label>7 — Matrícula (*)</label><input id="fpl-acid" type="text" placeholder="LV-XXX" style="text-transform:uppercase" /></div>
+        <div class="field"><label>Fecha UTC (*)</label><input id="fpl-date" type="date" /></div>
+      </div>
       <div class="form-grid">
         <div class="field">
-          <label>Nombre / matrícula</label>
-          <input id="f-name" type="text" placeholder="LV-XXX · PA-28" />
+          <label>8 — Reglas de vuelo (*)</label>
+          <select id="fpl-rules">
+            <option value="">...</option>
+            <option value="I">I — IFR</option>
+            <option value="V">V — VFR</option>
+            <option value="Y">Y — IFR primero</option>
+            <option value="Z">Z — VFR primero</option>
+          </select>
         </div>
         <div class="field">
-          <label>Viento cruzado máx. (kt)</label>
-          <input id="f-xwind" type="number" min="0" placeholder="15" />
-        </div>
-        <div class="field">
-          <label>Viento de cola máx. (kt)</label>
-          <input id="f-tail" type="number" min="0" placeholder="10" />
-        </div>
-        <div class="field">
-          <label>Viento frontal máx. (kt)</label>
-          <input id="f-head" type="number" min="0" placeholder="25" />
-        </div>
-        <div class="field">
-          <label>Visibilidad mínima (km)</label>
-          <input id="f-vis" type="number" min="0" step="0.1" placeholder="5" />
-        </div>
-        <div class="field">
-          <label>Techo mínimo (ft)</label>
-          <input id="f-ceil" type="number" min="0" placeholder="1000" />
-        </div>
-        <div class="field">
-          <label>Temp. máxima (°C)</label>
-          <input id="f-tmax" type="number" placeholder="40" />
-        </div>
-        <div class="field">
-          <label>Temp. mínima (°C)</label>
-          <input id="f-tmin" type="number" placeholder="-10" />
+          <label>Tipo de vuelo (*)</label>
+          <select id="fpl-type">
+            <option value="">...</option>
+            <option value="S">S — Aerolinea</option>
+            <option value="N">N — No aerolinea</option>
+            <option value="G">G — Aviación general</option>
+            <option value="M">M — Militar</option>
+            <option value="X">X — Otro</option>
+          </select>
         </div>
       </div>
-      <div style="padding: 0 0 4px">
-        <label class="checkbox-row">
-          <input type="checkbox" id="f-rain" />
-          <span>Puede operar con lluvia leve</span>
-        </label>
-        <label class="checkbox-row">
-          <input type="checkbox" id="f-ice" />
-          <span>Certificado para vuelo en engelamiento</span>
-        </label>
+    </div>
+    <div class="card">
+      <div class="card-title">9 — Aeronave</div>
+      <div class="form-grid">
+        <div class="field"><label>Cantidad</label><input id="fpl-num" type="number" min="1" value="1" /></div>
+        <div class="field"><label>Tipo ICAO (*)</label><input id="fpl-actype" type="text" placeholder="C172" style="text-transform:uppercase" /></div>
       </div>
-      <div class="btn-row" style="margin-top:16px">
-        <button class="btn-analyze" style="flex:1" onclick="saveCustomAircraft()">Guardar</button>
-        <button class="btn-secondary" onclick="clearAcForm()">Limpiar</button>
+      <div class="field">
+        <label>Categoría de estela turbulenta (*)</label>
+        <select id="fpl-wake">
+          <option value="">...</option>
+          <option value="L">L — Liviano (&lt;7.000 kg)</option>
+          <option value="M">M — Mediano (7.000–136.000 kg)</option>
+          <option value="H">H — Pesado (&gt;136.000 kg)</option>
+        </select>
       </div>
-      <div class="status-msg" id="ac-status"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">10 — Equipamiento</div>
+      <div class="field"><label>Equipamiento COM/NAV/APP (*)</label><input id="fpl-equip" type="text" placeholder="SDFGRY/SD" style="text-transform:uppercase" /></div>
+      <div class="field"><label>Equipamiento de vigilancia (*)</label><input id="fpl-surv" type="text" placeholder="C" style="text-transform:uppercase" /></div>
+    </div>
+    <div class="card">
+      <div class="card-title">13 — Salida</div>
+      <div class="form-grid">
+        <div class="field"><label>Aeródromo de salida (*)</label><input id="fpl-adep" type="text" placeholder="SAWE" style="text-transform:uppercase" /></div>
+        <div class="field"><label>Hora salida UTC (*)</label><input id="fpl-eobt" type="time" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">15 — Crucero</div>
+      <div class="form-grid">
+        <div class="field"><label>Velocidad (*)</label><input id="fpl-speed" type="text" placeholder="N0100" style="text-transform:uppercase" /></div>
+        <div class="field"><label>Nivel (*)</label><input id="fpl-level" type="text" placeholder="VFR" style="text-transform:uppercase" /></div>
+      </div>
+      <div class="field"><label>Ruta (*)</label><textarea id="fpl-route" placeholder="DCT o puntos de ruta..."></textarea></div>
+    </div>
+    <div class="card">
+      <div class="card-title">16 — Destino y alternativas</div>
+      <div class="form-grid">
+        <div class="field"><label>Aeródromo destino (*)</label><input id="fpl-ades" type="text" placeholder="SAZB" style="text-transform:uppercase" /></div>
+        <div class="field"><label>Tiempo total estimado (*)</label><input id="fpl-eet" type="time" /></div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>1° Alternativa (*)</label><input id="fpl-altn1" type="text" placeholder="SAWE" style="text-transform:uppercase" /></div>
+        <div class="field"><label>2° Alternativa</label><input id="fpl-altn2" type="text" placeholder="SAWH" style="text-transform:uppercase" /></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">18 — Otra información</div>
+      <div class="field"><label>PBN/</label><input id="fpl-pbn" type="text" placeholder="B2" style="text-transform:uppercase" /></div>
+      <div class="field">
+        <label>PER/</label>
+        <select id="fpl-per">
+          <option value="">...</option>
+          <option value="A">A — &lt;91 kt IAS</option>
+          <option value="B">B — 91–121 kt IAS</option>
+          <option value="C">C — 121–141 kt IAS</option>
+          <option value="D">D — 141–166 kt IAS</option>
+          <option value="E">E — 166–211 kt IAS</option>
+        </select>
+      </div>
+      <div class="field"><label>DOF/</label><input id="fpl-dof" type="text" placeholder="250423" maxlength="6" /></div>
+      <div class="field"><label>REG/</label><input id="fpl-reg" type="text" placeholder="LV-XXX" style="text-transform:uppercase" /></div>
+      <div class="field"><label>Otra información</label><textarea id="fpl-other" placeholder="RMK/ ..."></textarea></div>
+    </div>
+    <div class="card">
+      <div class="card-title">19 — Dotación y supervivencia</div>
+      <div class="form-grid">
+        <div class="field"><label>Autonomía (*)</label><input id="fpl-endurance" type="time" /></div>
+        <div class="field"><label>Personas a bordo (*)</label><input id="fpl-pob" type="number" min="1" value="1" /></div>
+      </div>
+      <div class="field">
+        <label>Radio de emergencia</label>
+        <select id="fpl-radio">
+          <option value="VHF">VHF</option>
+          <option value="UHF">UHF</option>
+          <option value="UHF/VHF">UHF/VHF</option>
+          <option value="ELT">ELT</option>
+        </select>
+      </div>
+      <div class="field"><label>Piloto al mando (*)</label><input id="fpl-pic" type="text" placeholder="Apellido, Nombre" /></div>
+    </div>
+    <div class="fpl-actions">
+      <button class="fpl-btn" onclick="fplToPdf()"><div class="fpl-btn-icon">📄</div>PDF</button>
+      <button class="fpl-btn" onclick="fplToMail()"><div class="fpl-btn-icon">✉️</div>Mail</button>
+      <button class="fpl-btn" onclick="fplShare()"><div class="fpl-btn-icon">↗️</div>Compartir</button>
+    </div>
+    <div class="status-msg" id="fpl-status"></div>
+  </div>
+</div>
+
+<!-- USUARIO -->
+<div class="screen" id="screen-usuario">
+  <div class="screen-content">
+    <div class="card">
+      <div class="card-title">Datos personales</div>
+      <div class="form-grid">
+        <div class="field"><label>Nombre (*)</label><input id="u-nombre" type="text" placeholder="Juan" /></div>
+        <div class="field"><label>Apellido (*)</label><input id="u-apellido" type="text" placeholder="García" /></div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Teléfono</label><input id="u-tel" type="tel" placeholder="+54 9 ..." /></div>
+        <div class="field"><label>Email</label><input id="u-email" type="email" placeholder="piloto@..." /></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Licencia</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Tipo de licencia</label>
+          <select id="u-lic-tipo">
+            <option value="">Seleccionar...</option>
+            <option value="PPL">PPL</option>
+            <option value="CPL">CPL</option>
+            <option value="ATPL">ATPL</option>
+            <option value="Student">Alumno piloto</option>
+          </select>
+        </div>
+        <div class="field"><label>N° de licencia</label><input id="u-lic-num" type="text" placeholder="AR-PPLX-..." /></div>
+      </div>
+      <div class="field"><label>DNI / Legajo</label><input id="u-dni" type="text" placeholder="..." /></div>
+    </div>
+    <div class="card">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="card-title">Exportar / Importar perfil</div>
+        <span class="collapsible-arrow">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <p style="font-size:0.82rem;color:var(--text2);margin-bottom:12px">Exportá tu perfil completo como JSON para hacer backup o usar en otro dispositivo.</p>
+        <div class="btn-row">
+          <button class="btn-secondary" style="flex:1" onclick="exportarPerfil()">📤 Exportar</button>
+          <button class="btn-secondary" style="flex:1" onclick="document.getElementById('import-file').click()">📥 Importar</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarPerfil(this)" />
+      </div>
+    </div>
+    <button class="btn-primary" onclick="guardarUsuario()">Guardar datos</button>
+    <div class="status-msg" id="usuario-status"></div>
+  </div>
+</div>
+
+<!-- AERONAVES -->
+<div class="screen" id="screen-aircraft">
+  <div class="screen-content">
+    <div class="card">
+      <div class="card-title">Mis aeronaves</div>
+      <div id="saved-ac-tabs" class="ac-tabs" style="margin-bottom:12px"></div>
+      <div class="divider"></div>
+      <div style="margin-top:16px">
+        <div class="section-divider">Desempeño — GO/NO-GO</div>
+        <div class="form-grid">
+          <div class="field"><label>Nombre / matrícula</label><input id="f-name" type="text" placeholder="LV-XXX" style="text-transform:uppercase" /></div>
+          <div class="field"><label>Viento cruzado máx. (kt)</label><input id="f-xwind" type="number" min="0" placeholder="15" /></div>
+          <div class="field"><label>Viento de cola máx. (kt)</label><input id="f-tail" type="number" min="0" placeholder="10" /></div>
+          <div class="field"><label>Viento frontal máx. (kt)</label><input id="f-head" type="number" min="0" placeholder="25" /></div>
+          <div class="field"><label>Visibilidad mínima (km)</label><input id="f-vis" type="number" min="0" step="0.1" placeholder="5" /></div>
+          <div class="field"><label>Techo mínimo (ft)</label><input id="f-ceil" type="number" min="0" placeholder="1000" /></div>
+          <div class="field"><label>Temp. máxima (°C)</label><input id="f-tmax" type="number" placeholder="40" /></div>
+          <div class="field"><label>Temp. mínima (°C)</label><input id="f-tmin" type="number" placeholder="-10" /></div>
+        </div>
+        <div>
+          <label class="checkbox-row"><input type="checkbox" id="f-rain" /><span>Puede operar con lluvia leve</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="f-ice" /><span>Certificado para vuelo en engelamiento</span></label>
+        </div>
+        <div class="section-divider">Datos FPL</div>
+        <div class="form-grid">
+          <div class="field"><label>Tipo ICAO</label><input id="f-actype" type="text" placeholder="C172" style="text-transform:uppercase" /></div>
+          <div class="field">
+            <label>Estela turbulenta</label>
+            <select id="f-wake">
+              <option value="L">L — Liviano</option>
+              <option value="M">M — Mediano</option>
+              <option value="H">H — Pesado</option>
+            </select>
+          </div>
+          <div class="field"><label>Equipamiento COM/NAV</label><input id="f-equip" type="text" placeholder="SDFGRY/SD" style="text-transform:uppercase" /></div>
+          <div class="field"><label>Equipamiento vigilancia</label><input id="f-surv" type="text" placeholder="C" style="text-transform:uppercase" /></div>
+          <div class="field">
+            <label>Categoría PER</label>
+            <select id="f-per">
+              <option value="A">A — &lt;91 kt</option>
+              <option value="B">B — 91–121 kt</option>
+              <option value="C">C — 121–141 kt</option>
+              <option value="D">D — 141–166 kt</option>
+            </select>
+          </div>
+          <div class="field"><label>PBN/</label><input id="f-pbn" type="text" placeholder="B2" style="text-transform:uppercase" /></div>
+        </div>
+        <div class="btn-row" style="margin-top:16px">
+          <button class="btn-primary" style="flex:1" onclick="saveCustomAircraft()">Guardar</button>
+          <button class="btn-secondary" onclick="clearAcForm()">Limpiar</button>
+          <button class="btn-secondary" style="color:var(--nogo);border-color:var(--nogo)" onclick="deleteAircraft()">🗑</button>
+        </div>
+        <div class="status-msg" id="ac-status"></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- DB STATUS BAR -->
-<div id="db-status-bar" style="display:none;position:fixed;bottom:65px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;font-size:0.8rem;font-family:var(--mono);z-index:99;text-align:center;color:var(--text2)"></div>
-
 <!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <button class="nav-item active" onclick="showScreen('brief')" id="nav-brief">
-    <span class="nav-icon">🛫</span>Brief
-  </button>
-  <button class="nav-item" onclick="showScreen('report')" id="nav-report">
-    <span class="nav-icon">📋</span>Informe
-  </button>
-  <button class="nav-item" onclick="showScreen('aircraft')" id="nav-aircraft">
-    <span class="nav-icon">✈️</span>Aeronave
-  </button>
+<div class="bottom-nav" id="bottom-nav">
+  <button class="nav-item active" onclick="showMetScreen('brief')" id="nav-brief"><span class="nav-icon">🛫</span>Brief</button>
+  <button class="nav-item" onclick="showMetScreen('report')" id="nav-report"><span class="nav-icon">📋</span>Informe</button>
+  <button class="nav-item" onclick="goToFpl()" id="nav-fpl"><span class="nav-icon">📄</span>FPL</button>
+  <button class="nav-item" onclick="showScreen('aircraft')" id="nav-aircraft"><span class="nav-icon">✈️</span>Aeronave</button>
 </div>
 
+<div id="db-status-bar" style="display:none;position:fixed;bottom:65px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;font-size:0.8rem;font-family:var(--mono);z-index:99;text-align:center;"></div>
+
 <!-- CONFIG MODAL -->
-<div class="modal-overlay" id="api-modal">
+<div class="modal-overlay" id="config-modal">
   <div class="modal">
     <h3>Configuración</h3>
     <p>Credencial de acceso al servicio meteorológico en tiempo real.</p>
@@ -825,1043 +370,6 @@ body {
   </div>
 </div>
 
-<script>
-// ═══════════════════════════════════════════════════
-// DATOS
-// ═══════════════════════════════════════════════════
-
-const PRELOADED_AIRCRAFT = [
-  {
-    name: 'PA-38 Tomahawk',
-    xwind: 15, tailwind: 10, headwind: 25,
-    vis: 5, ceil: 1000, tmax: 40, tmin: -15,
-    rain: false, ice: false
-  },
-  {
-    name: 'PA-28-181 Archer',
-    xwind: 17, tailwind: 10, headwind: 25,
-    vis: 5, ceil: 1000, tmax: 40, tmin: -15,
-    rain: false, ice: false
-  },
-  {
-    name: 'PA-32R Lance',
-    xwind: 17, tailwind: 10, headwind: 30,
-    vis: 5, ceil: 1000, tmax: 40, tmin: -20,
-    rain: false, ice: false
-  }
-];
-
-let state = {
-  airport: null,
-  runways: [],
-  selectedRwy: null,
-  aircraft: null,
-  metar: null,
-  metarRaw: '',
-  taf: null,
-  tafRaw: '',
-  forecast: null,
-  customAircraft: JSON.parse(localStorage.getItem('fb_aircraft_v2') || '[]'),
-  sarasa: localStorage.getItem('fb_sarasa') || '5c8c2ca8bc494b98bbc53eb007ef8e8f',
-  theme: localStorage.getItem('fb_theme') || 'light',
-  currentView: 'metar',
-  dbReady: false,
-  airportsDb: [],
-  runwaysDb: []
-};
-
-// ═══════════════════════════════════════════════════
-// THEME
-// ═══════════════════════════════════════════════════
-function applyTheme() {
-  document.documentElement.setAttribute('data-theme', state.theme);
-  document.getElementById('theme-btn').textContent = state.theme === 'dark' ? '☀️' : '🌙';
-}
-function toggleTheme() {
-  state.theme = state.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('fb_theme', state.theme);
-  applyTheme();
-}
-applyTheme();
-
-// ═══════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
-  document.getElementById('nav-' + name).classList.add('active');
-}
-
-function showView(name) {
-  state.currentView = name;
-  document.querySelectorAll('.view-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['metar','taf','7dias'][i] === name);
-  });
-  document.getElementById('view-metar').style.display = name === 'metar' ? 'block' : 'none';
-  document.getElementById('view-taf').style.display = name === 'taf' ? 'block' : 'none';
-  document.getElementById('view-7dias').style.display = name === '7dias' ? 'block' : 'none';
-}
-
-// ═══════════════════════════════════════════════════
-// CREDENTIALS
-// ═══════════════════════════════════════════════════
-function mostrarConfig() {
-  document.getElementById('config-input').value = state.sarasa;
-  document.getElementById('api-modal').classList.add('visible');
-}
-function guardarCredencial() {
-  const cred = document.getElementById('config-input').value.trim();
-  state.sarasa = cred;
-  localStorage.setItem('fb_sarasa', cred);
-  document.getElementById('api-modal').classList.remove('visible');
-}
-document.getElementById('api-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('api-modal'))
-    document.getElementById('api-modal').classList.remove('visible');
-});
-
-// ═══════════════════════════════════════════════════
-// INDEXEDDB
-// ═══════════════════════════════════════════════════
-const DB_NAME = 'flightbrief_db';
-const DB_VERSION = 1;
-const _h = () => ({ ['X-A'+'PI-K'+'ey']: state.sarasa });
-const AIRPORTS_URL = 'https://raw.githubusercontent.com/GabrielBellesi-edu/flightbrief/refs/heads/main/data/airports.json';
-const RUNWAYS_URL  = 'https://raw.githubusercontent.com/GabrielBellesi-edu/flightbrief/refs/heads/main/data/runways.json';
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('airports')) {
-        const as = db.createObjectStore('airports', { keyPath: 'ICAO' });
-        as.createIndex('name', 'name', { unique: false });
-        as.createIndex('country', 'country', { unique: false });
-      }
-      if (!db.objectStoreNames.contains('runways')) {
-        const rs = db.createObjectStore('runways', { autoIncrement: true });
-        rs.createIndex('airport', 'airport', { unique: false });
-      }
-      if (!db.objectStoreNames.contains('meta')) {
-        db.createObjectStore('meta', { keyPath: 'key' });
-      }
-    };
-    req.onsuccess = e => resolve(e.target.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbGetAll(db, store) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
-    const req = tx.objectStore(store).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbPutAll(db, store, items) {
-  const CHUNK = 200;
-  const chunks = [];
-  for (let i = 0; i < items.length; i += CHUNK) {
-    chunks.push(items.slice(i, i + CHUNK));
-  }
-  return chunks.reduce((chain, chunk, idx) => {
-    return chain.then(() => new Promise((resolve, reject) => {
-      const tx = db.transaction(store, 'readwrite');
-      const os = tx.objectStore(store);
-      chunk.forEach(item => os.put(item));
-      tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
-    }));
-  }, Promise.resolve());
-}
-
-function dbGet(db, store, key) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
-    const req = tx.objectStore(store).get(key);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function initDatabase() {
-  showDbStatus('<span class="spin"></span>Iniciando base de datos...');
-  try {
-    console.log('[FlightBrief] Abriendo IndexedDB...');
-    const db = await openDB();
-    console.log('[FlightBrief] IndexedDB abierto OK');
-    const meta = await dbGet(db, 'meta', 'loaded');
-    console.log('[FlightBrief] Meta:', meta);
-    if (meta && meta.value) {
-      console.log('[FlightBrief] Datos ya en cache, cargando...');
-      state.airportsDb = await dbGetAll(db, 'airports');
-      state.runwaysDb  = await dbGetAll(db, 'runways');
-      state.dbReady = true;
-      console.log('[FlightBrief] DB lista:', state.airportsDb.length, 'aeropuertos,', state.runwaysDb.length, 'pistas');
-      hideDbStatus();
-      return;
-    }
-    console.log('[FlightBrief] Sin cache, descargando...');
-    await downloadAndStore(db);
-  } catch(e) {
-    console.error('[FlightBrief] Error initDatabase:', e);
-    showDbStatus('Error al iniciar base de datos: ' + e.message, true);
-  }
-}
-
-async function downloadAndStore(db) {
-  showDbStatus('<span class="spin"></span>Descargando base de aeropuertos (primera vez)...');
-  try {
-    console.log('[FlightBrief] Descargando', AIRPORTS_URL);
-    const apRes = await fetch(AIRPORTS_URL);
-    console.log('[FlightBrief] airports.json status:', apRes.status);
-    const airports = await apRes.json();
-    console.log('[FlightBrief] airports cargados:', airports.length);
-
-    console.log('[FlightBrief] Descargando', RUNWAYS_URL);
-    const rwRes = await fetch(RUNWAYS_URL);
-    console.log('[FlightBrief] runways.json status:', rwRes.status);
-    const runways = await rwRes.json();
-    console.log('[FlightBrief] runways cargados:', runways.length);
-
-    showDbStatus('<span class="spin"></span>Guardando aeropuertos (' + airports.length + ')...');
-    await dbPutAll(db, 'airports', airports);
-    showDbStatus('<span class="spin"></span>Guardando pistas (' + runways.length + ')...');
-    await dbPutAll(db, 'runways', runways);
-    await dbPutAll(db, 'meta', [{ key: 'loaded', value: true, date: new Date().toISOString() }]);
-
-    state.airportsDb = airports;
-    state.runwaysDb  = runways;
-    state.dbReady = true;
-    console.log('[FlightBrief] DB lista y guardada');
-    hideDbStatus();
-  } catch(e) {
-    console.error('[FlightBrief] Error downloadAndStore:', e);
-    showDbStatus('Error descargando datos: ' + e.message, true);
-  }
-}
-
-async function refreshDatabase() {
-  showDbStatus('<span class="spin"></span>Actualizando base de datos...');
-  try {
-    const db = await openDB();
-    const tx = db.transaction(['airports','runways','meta'], 'readwrite');
-    tx.objectStore('airports').clear();
-    tx.objectStore('runways').clear();
-    tx.objectStore('meta').clear();
-    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
-    await downloadAndStore(db);
-  } catch(e) {
-    showDbStatus('Error actualizando: ' + e.message, true);
-  }
-}
-
-function showDbStatus(msg, isError) {
-  const el = document.getElementById('db-status-bar');
-  if (!el) return;
-  el.style.display = 'block';
-  el.style.color = isError ? 'var(--nogo)' : 'var(--text2)';
-  el.innerHTML = msg;
-}
-function hideDbStatus() {
-  const el = document.getElementById('db-status-bar');
-  if (el) el.style.display = 'none';
-}
-
-// ═══════════════════════════════════════════════════
-// AIRPORT SEARCH (local DB)
-// ═══════════════════════════════════════════════════
-let searchTimeout = null;
-function onIcaoInput(val) {
-  clearTimeout(searchTimeout);
-  val = val.trim().toUpperCase();
-  if (val.length < 2) { hideResults(); return; }
-  if (!state.dbReady) { return; }
-  searchTimeout = setTimeout(() => searchAirportLocal(val), 150);
-}
-
-function searchAirportLocal(q) {
-  const results = state.airportsDb.filter(a => {
-    if (!a.ICAO) return false;
-    return a.ICAO.startsWith(q) ||
-      (a.name && a.name.toUpperCase().includes(q)) ||
-      (a.IATA && a.IATA === q);
-  }).slice(0, 8);
-  if (results.length) showResults(results);
-  else hideResults();
-}
-
-function showResults(airports) {
-  const el = document.getElementById('search-results');
-  el.innerHTML = airports.map(a => `
-    <div class="search-result-item" onclick="selectAirport('${escHtml(a.ICAO)}','${escHtml(a.name)}',${parseFloat(a.lat)||0},${parseFloat(a.lon)||0})">
-      <div class="sri-icao">${a.ICAO}${a.IATA ? ' / '+a.IATA : ''}</div>
-      <div class="sri-name">${escHtml(a.name)}${a.city ? ' · ' + a.city : ''}${a.country ? ' · '+a.country : ''}</div>
-    </div>
-  `).join('');
-  el.classList.add('visible');
-}
-function hideResults() {
-  document.getElementById('search-results').classList.remove('visible');
-}
-
-function selectAirport(icao, name, lat, lon) {
-  hideResults();
-  document.getElementById('icao-input').value = '';
-  state.airport = { icao, name, lat, lon };
-  document.getElementById('as-icao').textContent = icao;
-  document.getElementById('as-name').textContent = name;
-  document.getElementById('airport-selected').classList.add('visible');
-  loadRunwaysFromDb(icao);
-  checkAnalyzeReady();
-}
-
-function clearAirport() {
-  state.airport = null;
-  state.runways = [];
-  state.selectedRwy = null;
-  document.getElementById('airport-selected').classList.remove('visible');
-  document.getElementById('icao-input').value = '';
-  document.getElementById('rwy-card').style.display = 'none';
-  document.getElementById('rwy-grid').innerHTML = '';
-  setBriefStatus('', '');
-  checkAnalyzeReady();
-}
-
-function rwyHdgFromIdent(ident) {
-  if (!ident) return null;
-  const n = parseInt(ident.replace(/[^0-9]/g, ''));
-  if (isNaN(n) || n < 1 || n > 36) return null;
-  return n * 10;
-}
-
-function loadRunwaysFromDb(icao) {
-  const rwys = state.runwaysDb.filter(r => r.airport === icao);
-  if (!rwys.length) {
-    document.getElementById('rwy-card').style.display = 'none';
-    setBriefStatus('', 'Sin info de pistas — podrás analizar igual');
-    return;
-  }
-  state.runways = rwys;
-  renderRunways(rwys);
-  document.getElementById('rwy-card').style.display = 'block';
-  setBriefStatus('ok', `${rwys.length} pista(s) encontrada(s)`);
-}
-
-function renderRunways(rwys) {
-  const grid = document.getElementById('rwy-grid');
-  const buttons = [];
-  rwys.forEach(r => {
-    const lIdent = r.l_ident;
-    const rIdent = r.r_ident;
-    const lHdg = parseFloat(r.l_hdg) || rwyHdgFromIdent(lIdent);
-    const rHdg = parseFloat(r.r_hdg) || rwyHdgFromIdent(rIdent);
-    const surf = r.surface ? ` · ${r.surface}` : '';
-    const len  = r.length  ? ` · ${r.length}m` : '';
-    if (lIdent && lIdent !== 'H1') {
-      buttons.push(`
-        <div class="rwy-btn" onclick="selectRunway('${escHtml(lIdent)}',${lHdg||0},this)">
-          <div class="rwy-code">RWY ${lIdent}</div>
-          <div class="rwy-hdg">${lHdg ? lHdg+'°' : '—'}${surf}${len}</div>
-        </div>
-      `);
-    }
-    if (rIdent && rIdent !== lIdent && rIdent !== 'H1') {
-      buttons.push(`
-        <div class="rwy-btn" onclick="selectRunway('${escHtml(rIdent)}',${rHdg||0},this)">
-          <div class="rwy-code">RWY ${rIdent}</div>
-          <div class="rwy-hdg">${rHdg ? rHdg+'°' : '—'}${surf}${len}</div>
-        </div>
-      `);
-    }
-  });
-  grid.innerHTML = buttons.join('');
-}
-
-function selectRunway(ident, hdg, el) {
-  document.querySelectorAll('.rwy-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  state.selectedRwy = { ident, hdg };
-  checkAnalyzeReady();
-}
-
-// ═══════════════════════════════════════════════════
-// AIRCRAFT
-// ═══════════════════════════════════════════════════
-function getAllAircraft() {
-  return [...PRELOADED_AIRCRAFT, ...state.customAircraft];
-}
-
-function renderAcTabs() {
-  const all = getAllAircraft();
-  const tabs = document.getElementById('ac-tabs');
-  tabs.innerHTML = all.map((a, i) =>
-    `<div class="ac-tab${state.aircraft && state.aircraft.name === a.name ? ' selected' : ''}" onclick="selectAircraft(${i})">${a.name}</div>`
-  ).join('');
-  renderSavedAcTabs();
-}
-
-function renderSavedAcTabs() {
-  const el = document.getElementById('saved-ac-tabs');
-  if (!state.customAircraft.length) {
-    el.innerHTML = '<span style="font-size:0.8rem;color:var(--text3)">Sin aeronaves guardadas</span>';
-    return;
-  }
-  el.innerHTML = state.customAircraft.map((a, i) =>
-    `<div class="ac-tab" onclick="loadCustomAc(${i})">${a.name}</div>`
-  ).join('');
-}
-
-function selectAircraft(idx) {
-  state.aircraft = getAllAircraft()[idx];
-  renderAcTabs();
-  renderAcSpecs();
-  checkAnalyzeReady();
-}
-
-function renderAcSpecs() {
-  const a = state.aircraft;
-  if (!a) { document.getElementById('ac-specs').innerHTML = ''; return; }
-  document.getElementById('ac-specs').innerHTML = `
-    <div class="ac-spec"><div class="ac-spec-label">Viento cruzado máx.</div><div class="ac-spec-val">${a.xwind} kt</div></div>
-    <div class="ac-spec"><div class="ac-spec-label">Viento de cola máx.</div><div class="ac-spec-val">${a.tailwind} kt</div></div>
-    <div class="ac-spec"><div class="ac-spec-label">Visibilidad mín.</div><div class="ac-spec-val">${a.vis} km</div></div>
-    <div class="ac-spec"><div class="ac-spec-label">Techo mín.</div><div class="ac-spec-val">${a.ceil} ft</div></div>
-    <div class="ac-spec"><div class="ac-spec-label">Temp. op.</div><div class="ac-spec-val">${a.tmin}° / ${a.tmax}°C</div></div>
-    <div class="ac-spec"><div class="ac-spec-label">Engelamiento</div><div class="ac-spec-val">${a.ice ? 'Certificado' : 'No cert.'}</div></div>
-  `;
-}
-
-function saveCustomAircraft() {
-  const ac = {
-    name:      document.getElementById('f-name').value.trim(),
-    xwind:     parseFloat(document.getElementById('f-xwind').value) || 15,
-    tailwind:  parseFloat(document.getElementById('f-tail').value) || 10,
-    headwind:  parseFloat(document.getElementById('f-head').value) || 25,
-    vis:       parseFloat(document.getElementById('f-vis').value) || 5,
-    ceil:      parseFloat(document.getElementById('f-ceil').value) || 1000,
-    tmax:      parseFloat(document.getElementById('f-tmax').value) || 40,
-    tmin:      parseFloat(document.getElementById('f-tmin').value) || -10,
-    rain:      document.getElementById('f-rain').checked,
-    ice:       document.getElementById('f-ice').checked,
-  };
-  if (!ac.name) { document.getElementById('ac-status').textContent = 'Ingresá un nombre'; return; }
-  const idx = state.customAircraft.findIndex(a => a.name === ac.name);
-  if (idx >= 0) state.customAircraft[idx] = ac;
-  else state.customAircraft.push(ac);
-  localStorage.setItem('fb_aircraft_v2', JSON.stringify(state.customAircraft));
-  document.getElementById('ac-status').className = 'status-msg ok';
-  document.getElementById('ac-status').textContent = 'Guardado ✓';
-  renderAcTabs();
-}
-
-function loadCustomAc(i) {
-  const a = state.customAircraft[i];
-  document.getElementById('f-name').value = a.name || '';
-  document.getElementById('f-xwind').value = a.xwind || '';
-  document.getElementById('f-tail').value = a.tailwind || '';
-  document.getElementById('f-head').value = a.headwind || '';
-  document.getElementById('f-vis').value = a.vis || '';
-  document.getElementById('f-ceil').value = a.ceil || '';
-  document.getElementById('f-tmax').value = a.tmax || '';
-  document.getElementById('f-tmin').value = a.tmin || '';
-  document.getElementById('f-rain').checked = !!a.rain;
-  document.getElementById('f-ice').checked = !!a.ice;
-}
-
-function clearAcForm() {
-  ['f-name','f-xwind','f-tail','f-head','f-vis','f-ceil','f-tmax','f-tmin'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-rain').checked = false;
-  document.getElementById('f-ice').checked = false;
-  document.getElementById('ac-status').textContent = '';
-}
-
-// ═══════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════
-function checkAnalyzeReady() {
-  const ready = state.airport && state.aircraft;
-  document.getElementById('btn-analyze').disabled = !ready;
-}
-
-function setBriefStatus(type, msg) {
-  const el = document.getElementById('brief-status');
-  el.className = 'status-msg' + (type ? ' ' + type : '');
-  el.innerHTML = msg;
-}
-
-function calcComponents(windDir, windSpd, rwyHdg) {
-  if (windDir == null || isNaN(rwyHdg)) return { xwind: null, tailwind: null, headwind: null };
-  const angle = (windDir - rwyHdg) * Math.PI / 180;
-  const head = windSpd * Math.cos(angle);
-  const cross = Math.abs(windSpd * Math.sin(angle));
-  return {
-    xwind:    Math.round(cross * 10) / 10,
-    tailwind: head < 0 ? Math.round(-head * 10) / 10 : 0,
-    headwind: head > 0 ? Math.round(head * 10) / 10 : 0,
-  };
-}
-
-function checkStatus(val, limit, reverse) {
-  if (reverse) {
-    const pct = Math.round((limit / val) * 100);
-    if (val < limit) return { s: 'fail', pct: 100 };
-    if (val < limit * 1.3) return { s: 'warn', pct: Math.min(pct, 100) };
-    return { s: 'ok', pct: Math.max(0, pct - 50) };
-  }
-  const pct = Math.round((val / limit) * 100);
-  if (pct >= 100) return { s: 'fail', pct: 100 };
-  if (pct >= 75) return { s: 'warn', pct };
-  return { s: 'ok', pct };
-}
-
-function fmtCheck(name, detail, s, pct) {
-  return `
-    <div class="check-item ${s}">
-      <div class="check-dot"></div>
-      <div class="check-body">
-        <div class="check-name">${name}</div>
-        <div class="check-detail">${detail}</div>
-      </div>
-      <div class="check-pct">${pct}%</div>
-    </div>
-  `;
-}
-
-function escHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-function verdictClass(checks) {
-  if (checks.some(c => c.s === 'fail')) return 'nogo';
-  if (checks.some(c => c.s === 'warn')) return 'warn';
-  return 'go';
-}
-
-// ═══════════════════════════════════════════════════
-// METAR PARSER
-// ═══════════════════════════════════════════════════
-function parseMetar(raw) {
-  const m = { raw };
-  const wm = raw.match(/(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?KT/);
-  if (wm) {
-    m.wdir = wm[1] === 'VRB' ? null : parseInt(wm[1]);
-    m.wspd = parseInt(wm[2]);
-    m.gust = wm[4] ? parseInt(wm[4]) : 0;
-    m.vrb = wm[1] === 'VRB';
-  } else { m.wspd = 0; m.wdir = 0; m.gust = 0; }
-  const vsm = raw.match(/(\d+(?:\.\d+)?)SM/);
-  const vm4 = raw.match(/\b(\d{4})\b/);
-  if (raw.includes('CAVOK')) m.vis = 10;
-  else if (vsm) m.vis = parseFloat(vsm[1]) * 1.852;
-  else if (vm4) m.vis = parseInt(vm4[1]) / 1000;
-  else m.vis = null;
-  const clouds = [...raw.matchAll(/(BKN|OVC|FEW|SCT)(\d{3})/g)];
-  let ceil = null;
-  clouds.forEach(c => {
-    if (['BKN','OVC'].includes(c[1])) {
-      const ft = parseInt(c[2]) * 100;
-      if (ceil === null || ft < ceil) ceil = ft;
-    }
-  });
-  if (raw.includes('CAVOK')) ceil = 99999;
-  m.ceil = ceil;
-  const tm = raw.match(/\b(M?)(\d{2})\/(M?)(\d{2})\b/);
-  if (tm) {
-    m.temp = (tm[1] ? -1 : 1) * parseInt(tm[2]);
-    m.dew  = (tm[3] ? -1 : 1) * parseInt(tm[4]);
-  }
-  const qm = raw.match(/Q(\d{4})/);
-  if (qm) m.qnh = parseInt(qm[1]);
-  m.ts   = /\bTS\b/.test(raw);
-  m.fzra = /\bFZRA\b|\bFZDZ\b/.test(raw);
-  m.snow = /\bSN\b|\bGR\b|\bGS\b/.test(raw);
-  m.nosig = /\bNOSIG\b/.test(raw);
-  m.cavok = /\bCAVOK\b/.test(raw);
-  return m;
-}
-
-// ═══════════════════════════════════════════════════
-// METAR DECODE (human readable)
-// ═══════════════════════════════════════════════════
-function decodeMetar(raw, airportName) {
-  const tokens = raw.split(/\s+/);
-  const decoded = [];
-
-  tokens.forEach(t => {
-    let desc = null;
-    if (/^[A-Z]{4}$/.test(t) && t === tokens[0]) {
-      desc = `Estación: ${airportName || t}`;
-    } else if (/^\d{6}Z$/.test(t)) {
-      const day = t.slice(0,2), hh = t.slice(2,4), mm = t.slice(4,6);
-      desc = `Día ${day} del mes, ${hh}:${mm} UTC`;
-    } else if (/^(\d{3}|VRB)\d{2,3}(G\d{2,3})?KT$/.test(t)) {
-      const m = t.match(/^(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?KT$/);
-      if (m[1] === 'VRB') desc = `Viento variable ${m[2]} kt`;
-      else {
-        desc = `Viento desde ${m[1]}° a ${m[2]} kt`;
-        if (m[4]) desc += `, ráfagas ${m[4]} kt`;
-      }
-    } else if (t === 'CAVOK') {
-      desc = 'Visibilidad > 10 km, sin nubes significativas, sin fenómenos importantes';
-    } else if (/^\d{4}$/.test(t) && parseInt(t) <= 9999) {
-      desc = `Visibilidad ${parseInt(t) >= 9999 ? '≥ 10' : (parseInt(t)/1000).toFixed(1)} km`;
-    } else if (/^\d+SM$/.test(t)) {
-      desc = `Visibilidad ${t.replace('SM','')} millas estaturias (${(parseFloat(t)*1.852).toFixed(1)} km)`;
-    } else if (/^(FEW|SCT|BKN|OVC)\d{3}(CB|TCU)?$/.test(t)) {
-      const m = t.match(/^(FEW|SCT|BKN|OVC)(\d{3})(CB|TCU)?$/);
-      const tipos = { FEW:'Pocas nubes', SCT:'Nubes dispersas', BKN:'Nublado (broken)', OVC:'Cubierto (overcast)' };
-      desc = `${tipos[m[1]]} a ${parseInt(m[2])*100} ft${m[3] ? ` (${m[3]==='CB'?'cumulonimbus':'tower cumulus'})` : ''}`;
-    } else if (/^(M?)(\d{2})\/(M?)(\d{2})$/.test(t)) {
-      const m = t.match(/^(M?)(\d{2})\/(M?)(\d{2})$/);
-      const temp = (m[1]?-1:1)*parseInt(m[2]);
-      const dew  = (m[3]?-1:1)*parseInt(m[4]);
-      const spread = temp - dew;
-      desc = `Temperatura ${temp}°C, punto de rocío ${dew}°C${spread <= 3 ? ' ⚠️ spread bajo (riesgo niebla/engelamiento)' : ''}`;
-    } else if (/^Q\d{4}$/.test(t)) {
-      desc = `QNH (presión altimétrica) ${t.slice(1)} hPa`;
-    } else if (t === 'NOSIG') {
-      desc = 'Sin cambios significativos esperados en las próximas 2 horas';
-    } else if (/^TS/.test(t)) {
-      desc = '⛈️ Tormenta eléctrica — condición BLOQUEANTE';
-    } else if (t === 'FZRA') {
-      desc = '🧊 Lluvia engelante — condición BLOQUEANTE si no certificado';
-    } else if (t === 'SN') {
-      desc = '❄️ Nieve — condición BLOQUEANTE';
-    } else if (t === 'RA') {
-      desc = '🌧️ Lluvia';
-    } else if (t === 'DZ') {
-      desc = '🌦️ Llovizna';
-    } else if (t === 'BR') {
-      desc = '🌫️ Neblina (visibilidad reducida)';
-    } else if (t === 'FG') {
-      desc = '🌫️ Niebla densa';
-    } else if (t === 'SPECI') {
-      desc = 'Informe especial (condición fuera de lo normal)';
-    } else if (/^RMK/.test(t)) {
-      desc = 'Observaciones adicionales';
-    }
-    if (desc) decoded.push({ token: t, desc });
-  });
-  return decoded;
-}
-
-// ═══════════════════════════════════════════════════
-// ANALYSIS ENGINE
-// ═══════════════════════════════════════════════════
-function analyzeConditions(metar, ac, rwyHdg) {
-  const checks = [];
-  const effectiveWspd = metar.gust > metar.wspd ? metar.gust : metar.wspd;
-  const comp = rwyHdg != null ? calcComponents(metar.wdir, effectiveWspd, rwyHdg) : { xwind: null, tailwind: null };
-
-  if (metar.ts) checks.push({ s:'fail', name:'Thunderstorm', detail:'Tormenta eléctrica reportada — condición bloqueante', pct:100 });
-  if (metar.snow) checks.push({ s:'fail', name:'Nieve / granizo', detail:'Precipitación sólida reportada', pct:100 });
-
-  if (metar.fzra) {
-    if (!ac.ice) checks.push({ s:'fail', name:'Engelamiento (FZRA)', detail:'Aeronave no certificada para vuelo en engelamiento', pct:100 });
-    else checks.push({ s:'warn', name:'Engelamiento (FZRA)', detail:'Aeronave certificada — mayor atención requerida', pct:70 });
-  }
-
-  if (metar.temp != null && metar.dew != null) {
-    const spread = metar.temp - metar.dew;
-    if (spread <= 2 && metar.temp <= 10) {
-      if (!ac.ice) checks.push({ s:'fail', name:'Riesgo de engelamiento', detail:`Temp ${metar.temp}°C / Rocío ${metar.dew}°C — spread ${spread}°C, condiciones propicias`, pct:90 });
-      else checks.push({ s:'warn', name:'Riesgo de engelamiento', detail:`Spread ${spread}°C — vigilar acumulación de hielo`, pct:60 });
-    } else if (spread <= 4 && metar.temp <= 15) {
-      checks.push({ s:'warn', name:'Riesgo de niebla/engelamiento', detail:`Spread ${spread}°C — posibilidad de reducción de visibilidad`, pct:45 });
-    }
-  }
-
-  if (comp.xwind != null) {
-    const r = checkStatus(comp.xwind, ac.xwind, false);
-    checks.push({ ...r, name:'Viento cruzado', detail:`${comp.xwind} kt (límite ${ac.xwind} kt)` });
-  }
-  if (comp.tailwind != null && comp.tailwind > 0) {
-    const r = checkStatus(comp.tailwind, ac.tailwind, false);
-    checks.push({ ...r, name:'Viento de cola', detail:`${comp.tailwind} kt (límite ${ac.tailwind} kt)` });
-  } else if (comp.headwind != null) {
-    checks.push({ s:'ok', name:'Viento de frente', detail:`${comp.headwind} kt de frente — favorable`, pct:0 });
-  }
-  if (metar.vis != null) {
-    const r = checkStatus(metar.vis, ac.vis, true);
-    checks.push({ ...r, name:'Visibilidad', detail:`${metar.vis.toFixed(1)} km (mínimo ${ac.vis} km)` });
-  }
-  if (metar.ceil != null && metar.ceil < 99999) {
-    const r = checkStatus(metar.ceil, ac.ceil, true);
-    checks.push({ ...r, name:'Techo de nubes', detail:`${metar.ceil} ft (mínimo ${ac.ceil} ft)` });
-  } else if (metar.cavok) {
-    checks.push({ s:'ok', name:'Techo de nubes', detail:'CAVOK — sin nubes significativas', pct:0 });
-  }
-  if (metar.temp != null) {
-    if (metar.temp > ac.tmax || metar.temp < ac.tmin) {
-      checks.push({ s:'fail', name:'Temperatura', detail:`${metar.temp}°C — fuera del rango (${ac.tmin}°C a ${ac.tmax}°C)`, pct:100 });
-    } else {
-      const margin = Math.min(ac.tmax - metar.temp, metar.temp - ac.tmin);
-      const s = margin < 5 ? 'warn' : 'ok';
-      checks.push({ s, name:'Temperatura', detail:`${metar.temp}°C — rango (${ac.tmin}°C a ${ac.tmax}°C)`, pct: s==='warn'?60:10 });
-    }
-  }
-  if (metar.gust > 0 && metar.wspd > 0 && metar.gust > metar.wspd * 1.3) {
-    const diff = metar.gust - metar.wspd;
-    const s = diff > 15 ? 'fail' : 'warn';
-    checks.push({ s, name:'Ráfagas', detail:`Ráfagas ${metar.gust} kt sobre base ${metar.wspd} kt (delta ${diff} kt)`, pct: Math.min(Math.round(diff/20*100),100) });
-  }
-  return checks;
-}
-
-// ═══════════════════════════════════════════════════
-// TAF PARSER
-// ═══════════════════════════════════════════════════
-function parseTaf(raw) {
-  const lines = raw.trim().split('\n');
-  const fullRaw = lines.join(' ');
-  const periods = [];
-  const periodRegex = /(BECMG|TEMPO|FM\d{6}|PROB\d{2}(?:\s+TEMPO)?|\d{4}\/\d{4})/g;
-  const parts = fullRaw.split(/(BECMG|TEMPO|FM\d{6}|PROB\d{2}(?:\s+TEMPO)?)/).filter(Boolean);
-
-  let i = 0;
-  while (i < parts.length) {
-    let type = 'BASE';
-    let chunk = parts[i];
-    if (/^(BECMG|TEMPO|FM\d{6}|PROB\d{2})/.test(chunk.trim())) {
-      type = chunk.trim().split(' ')[0];
-      i++;
-      if (i < parts.length) chunk = parts[i];
-      else break;
-    }
-    const timeM = chunk.match(/(\d{4})\/(\d{4})/);
-    let timeStr = '';
-    if (timeM) {
-      const d1 = timeM[1], d2 = timeM[2];
-      timeStr = `Día ${d1.slice(0,2)} ${d1.slice(2,4)}:00 → Día ${d2.slice(0,2)} ${d2.slice(2,4)}:00 UTC`;
-    }
-    const p = parseMetar(chunk);
-    p.timeStr = timeStr;
-    p.type = type;
-    periods.push(p);
-    i++;
-  }
-  return periods;
-}
-
-// ═══════════════════════════════════════════════════
-// MAIN ANALYSIS
-// ═══════════════════════════════════════════════════
-async function runAnalysis() {
-  if (!state.airport || !state.aircraft) return;
-  setBriefStatus('', '<span class="spin"></span>Obteniendo datos meteorológicos...');
-  document.getElementById('btn-analyze').disabled = true;
-
-  try {
-    const [metarRes, tafRes] = await Promise.all([
-      fetch(`https://api.checkwx.com/metar/${state.airport.icao}/decoded`, { headers: _h() }),
-      fetch(`https://api.checkwx.com/taf/${state.airport.icao}/decoded`,  { headers: _h() })
-    ]);
-    const metarData = await metarRes.json();
-    const tafData   = await tafRes.json();
-
-    if (!metarData.data || !metarData.data.length) throw new Error('Sin datos METAR para ' + state.airport.icao);
-
-    state.metarRaw = metarData.data[0].raw_text || '';
-    state.metar = parseMetar(state.metarRaw);
-    state.tafRaw = tafData.data && tafData.data[0] ? tafData.data[0].raw_text || '' : '';
-
-    setBriefStatus('', '<span class="spin"></span>Obteniendo pronóstico extendido...');
-    await fetchForecast7(state.airport.lat, state.airport.lon);
-
-    renderReport();
-    showScreen('report');
-    setBriefStatus('ok', 'Análisis completado ✓');
-
-  } catch(e) {
-    setBriefStatus('error', 'Error: ' + e.message);
-  }
-
-  document.getElementById('btn-analyze').disabled = false;
-}
-
-// ═══════════════════════════════════════════════════
-// 7-DAY FORECAST
-// ═══════════════════════════════════════════════════
-async function fetchForecast7(lat, lon) {
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    const end = new Date(Date.now() + 7*86400000).toISOString().slice(0, 10);
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=windspeed_10m,winddirection_10m,windgusts_10m,cloudcover,precipitation,temperature_2m,dewpoint_2m,visibility&wind_speed_unit=kn&start_date=${today}&end_date=${end}&timezone=auto`;
-    const res = await fetch(url);
-    state.forecast = await res.json();
-  } catch(e) {
-    state.forecast = null;
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// RENDER REPORT
-// ═══════════════════════════════════════════════════
-function renderReport() {
-  const ac = state.aircraft;
-  const metar = state.metar;
-  const rwyHdg = state.selectedRwy ? state.selectedRwy.hdg : null;
-
-  // Verdict
-  const checks = analyzeConditions(metar, ac, rwyHdg);
-  const vc = verdictClass(checks);
-  const verdictLabels = { go:'GO', warn:'PRECAUCIÓN', nogo:'NO-GO' };
-  const verdictSubs = {
-    go: 'Condiciones dentro de parámetros operacionales',
-    warn: 'Condiciones marginales — decisión del piloto en comando',
-    nogo: `${checks.filter(c=>c.s==='fail').length} factor(es) bloqueante(s) detectado(s)`
-  };
-  const banner = document.getElementById('verdict-banner');
-  banner.className = `verdict-banner ${vc}`;
-  banner.innerHTML = `
-    <div class="verdict-label">${verdictLabels[vc]}</div>
-    <div class="verdict-sub">${verdictSubs[vc]}</div>
-    <div class="verdict-meta">${state.airport.icao} · ${ac.name}${state.selectedRwy ? ' · RWY ' + state.selectedRwy.ident : ''}</div>
-  `;
-
-  // METAR view
-  const decoded = decodeMetar(state.metarRaw, state.airport.name);
-  document.getElementById('view-metar').innerHTML = `
-    <div class="card">
-      <div class="card-title">Análisis METAR</div>
-      <div class="check-list">${checks.map(c => fmtCheck(c.name, c.detail, c.s, c.pct)).join('')}</div>
-    </div>
-    <div class="card">
-      <div class="collapsible-header" onclick="toggleCollapsible(this)">
-        <div class="card-title">METAR decodificado</div>
-        <span class="collapsible-arrow">▼</span>
-      </div>
-      <div class="collapsible-body">
-        <div class="metar-raw-box">${escHtml(state.metarRaw)}</div>
-        <div class="decode-list">
-          ${decoded.map(d => `
-            <div class="decode-item">
-              <div class="decode-token">${escHtml(d.token)}</div>
-              <div class="decode-desc">${d.desc}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-
-  // TAF view
-  renderTafView(ac, rwyHdg);
-
-  // 7-day view
-  render7DayView(ac, rwyHdg);
-
-  document.getElementById('report-empty').style.display = 'none';
-  document.getElementById('report-content').style.display = 'block';
-  showView('metar');
-}
-
-// ═══════════════════════════════════════════════════
-// TAF VIEW
-// ═══════════════════════════════════════════════════
-function renderTafView(ac, rwyHdg) {
-  const el = document.getElementById('view-taf');
-  if (!state.tafRaw) {
-    el.innerHTML = `<div class="card"><div class="empty-state"><div class="empty-icon">📡</div><div class="empty-title">Sin TAF disponible</div><div class="empty-desc">No hay pronóstico TAF para este aeropuerto.</div></div></div>`;
-    return;
-  }
-
-  const periods = parseTaf(state.tafRaw);
-  const typeLabels = { BASE:'Condición base', TEMPO:'TEMPO', BECMG:'BECMG', FM:'Desde', PROB30:'PROB 30%', PROB40:'PROB 40%' };
-
-  const periodsHtml = periods.map(p => {
-    const checks = analyzeConditions(p, ac, rwyHdg);
-    const vc = verdictClass(checks);
-    const effectiveWspd = (p.gust||0) > (p.wspd||0) ? p.gust : (p.wspd||0);
-    const comp = rwyHdg != null ? calcComponents(p.wdir, effectiveWspd, rwyHdg) : {};
-
-    return `
-      <div class="taf-period">
-        <div class="taf-period-header">
-          <div class="taf-period-time">${p.timeStr || '—'}</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <span class="taf-period-type taf-type-${p.type === 'BASE' ? 'base' : p.type === 'TEMPO' ? 'tempo' : 'becmg'}">${p.type}</span>
-            <span class="taf-period-verdict ${vc}">${vc === 'go' ? 'GO' : vc === 'warn' ? 'CAUT' : 'NO-GO'}</span>
-          </div>
-        </div>
-        <div class="taf-period-body">
-          <div>
-            <div class="taf-cell-label">Viento</div>
-            <div class="taf-cell-val">${p.vrb ? 'Variable' : (p.wdir||'—') + '°'} / ${p.wspd||0} kt${p.gust ? ' G'+p.gust : ''}</div>
-          </div>
-          <div>
-            <div class="taf-cell-label">Viento cruzado</div>
-            <div class="taf-cell-val">${comp.xwind != null ? comp.xwind + ' kt' : '—'}</div>
-          </div>
-          <div>
-            <div class="taf-cell-label">Visibilidad</div>
-            <div class="taf-cell-val">${p.vis != null ? p.vis.toFixed(1) + ' km' : (p.cavok ? 'CAVOK' : '—')}</div>
-          </div>
-          <div>
-            <div class="taf-cell-label">Techo</div>
-            <div class="taf-cell-val">${p.cavok ? 'CAVOK' : (p.ceil ? p.ceil + ' ft' : '—')}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const tafDecoded = decodeMetar(state.tafRaw, state.airport.name);
-
-  el.innerHTML = `
-    <div class="card">
-      <div class="card-title">Evolución TAF por período</div>
-      <div class="taf-list">${periodsHtml}</div>
-    </div>
-    <div class="card">
-      <div class="collapsible-header" onclick="toggleCollapsible(this)">
-        <div class="card-title">TAF decodificado</div>
-        <span class="collapsible-arrow">▼</span>
-      </div>
-      <div class="collapsible-body">
-        <div class="metar-raw-box">${escHtml(state.tafRaw)}</div>
-        <div class="decode-list" style="margin-top:12px">
-          ${tafDecoded.map(d => `
-            <div class="decode-item">
-              <div class="decode-token">${escHtml(d.token)}</div>
-              <div class="decode-desc">${d.desc}</div>
-            </div>
-          `).join('')}
-        </div>
-        <div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);font-size:0.78rem;color:var(--text3)">
-          <strong style="color:var(--text2)">Guía de claves TAF:</strong>
-          BECMG = cambio gradual permanente · TEMPO = cambio temporal (&lt;1h) · PROB30/40 = probabilidad 30% o 40% · FM = desde esa hora
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// ═══════════════════════════════════════════════════
-// 7-DAY VIEW
-// ═══════════════════════════════════════════════════
-function render7DayView(ac, rwyHdg) {
-  const el = document.getElementById('view-7dias');
-  if (!state.forecast || !state.forecast.hourly) {
-    el.innerHTML = `<div class="card"><div class="empty-state"><div class="empty-icon">📡</div><div class="empty-title">Sin pronóstico extendido</div><div class="empty-desc">No se pudo obtener el pronóstico de 7 días.</div></div></div>`;
-    return;
-  }
-
-  const h = state.forecast.hourly;
-  const dayGroups = {};
-
-  for (let i = 0; i < h.time.length; i++) {
-    const dt = new Date(h.time[i]);
-    const dayKey = h.time[i].slice(0,10);
-    if (!dayGroups[dayKey]) dayGroups[dayKey] = [];
-
-    const ws = Math.round(h.windspeed_10m[i] || 0);
-    const wd = Math.round(h.winddirection_10m[i] || 0);
-    const wg = Math.round(h.windgusts_10m[i] || 0);
-    const temp = Math.round(h.temperature_2m[i] || 0);
-    const dew = Math.round((h.dewpoint_2m || [])[i] || 0);
-    const cc = Math.round(h.cloudcover[i] || 0);
-    const precip = h.precipitation[i] || 0;
-    const vis = h.visibility ? Math.round((h.visibility[i] || 10000) / 1000) : 10;
-    const ceil = cc > 75 ? Math.round(2000 - cc * 15) : (cc > 50 ? 3000 : 99999);
-
-    const effectiveWs = Math.max(ws, wg * 0.8);
-    const comp = rwyHdg != null ? calcComponents(wd, effectiveWs, rwyHdg) : { xwind: effectiveWs * 0.5, tailwind: 0 };
-
-    const pseudoMetar = {
-      wdir: wd, wspd: ws, gust: wg, temp, dew,
-      vis, ceil: ceil < 99999 ? ceil : null, cavok: ceil === 99999,
-      ts: false, fzra: temp <= 2 && precip > 0, snow: temp <= 0 && precip > 0
-    };
-    const checks = analyzeConditions(pseudoMetar, ac, rwyHdg);
-    const vc = verdictClass(checks);
-
-    dayGroups[dayKey].push({ hour: dt.getHours(), ws, wd, wg, temp, vis, ceil: ceil < 99999 ? ceil : null, vc, checks, comp, precip });
-  }
-
-  // Group consecutive hours with same verdict
-  const daysHtml = Object.entries(dayGroups).map(([dayKey, hours]) => {
-    const date = new Date(dayKey + 'T12:00:00');
-    const dayName = date.toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'short' });
-
-    const windows = [];
-    let cur = null;
-    hours.forEach(h => {
-      if (!cur || cur.vc !== h.vc) {
-        cur = { vc: h.vc, start: h.hour, end: h.hour, hours: [h] };
-        windows.push(cur);
-      } else {
-        cur.end = h.hour;
-        cur.hours.push(h);
-      }
-    });
-
-    const windowsHtml = windows.map(w => {
-      const avgWs = Math.round(w.hours.reduce((a,h) => a+h.ws, 0) / w.hours.length);
-      const avgWg = Math.round(w.hours.reduce((a,h) => a+h.wg, 0) / w.hours.length);
-      const avgT  = Math.round(w.hours.reduce((a,h) => a+h.temp, 0) / w.hours.length);
-      const minV  = Math.min(...w.hours.map(h => h.vis));
-      const minC  = Math.min(...w.hours.map(h => h.ceil || 99999));
-      const reasons = w.hours[0].checks.filter(c => c.s !== 'ok').map(c => c.name);
-
-      return `
-        <div class="time-window ${w.vc}">
-          <div class="tw-time">${String(w.start).padStart(2,'0')}:00 – ${String(w.end+1).padStart(2,'0')}:00</div>
-          <div class="tw-verdict">${w.vc === 'go' ? '✓ GO' : w.vc === 'warn' ? '⚠ CAUT' : '✕ NO-GO'}</div>
-          <div class="tw-details">
-            <span class="tw-chip">💨 ${avgWs}kt${avgWg > avgWs ? ' Ráf.'+avgWg+'kt' : ''}</span>
-            <span class="tw-chip">🌡️ ${avgT}°C</span>
-            ${minV < 10 ? `<span class="tw-chip">👁️ ${minV}km</span>` : ''}
-            ${minC < 99999 ? `<span class="tw-chip">☁️ ${minC}ft</span>` : ''}
-            ${reasons.length ? `<span class="tw-chip" style="color:var(--nogo)">${reasons.slice(0,2).join(', ')}</span>` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    return `
-      <div class="day-block">
-        <div class="day-label">${dayName}</div>
-        <div class="window-list">${windowsHtml}</div>
-      </div>
-    `;
-  }).join('');
-
-  el.innerHTML = `<div>${daysHtml}</div>`;
-}
-
-// ═══════════════════════════════════════════════════
-// COLLAPSIBLE
-// ═══════════════════════════════════════════════════
-function toggleCollapsible(header) {
-  const body = header.nextElementSibling;
-  const arrow = header.querySelector('.collapsible-arrow');
-  body.classList.toggle('open');
-  arrow.classList.toggle('open');
-}
-
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
-renderAcTabs();
-if (!state.sarasa) {
-  setTimeout(() => mostrarConfig(), 500);
-}
-
-// Llamar initDatabase directamente — no esperar eventos
-console.log('[FlightBrief] Iniciando base de datos...');
-initDatabase();
-
-// SERVICE WORKER
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
-</script>
+<script src="app.js"></script>
 </body>
 </html>
